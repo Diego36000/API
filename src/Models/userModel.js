@@ -3,44 +3,61 @@ import bcrypt from 'bcryptjs';
 
 class User {
 
-    getAllUsers(callback) {
-        const sql = 'SELECT * FROM users';
-        db.query(sql, callback);
+    async getAllUsers() {
+        const { rows } = await db.query(`
+            SELECT u.id, u.name, u.last_name, u.username, u.email, u.photo, u.phone, u.bio, u.country_id, u.city, u.is_admin, co.name as country_name
+            FROM users u
+            LEFT JOIN countries co ON co.id = u.country_id
+        `);
+        return rows;
     }
 
-    getUserById(id, callback) {
-        const sql = 'SELECT * FROM users WHERE id = ?';
-        db.query(sql, [id], callback);
+    async getUserById(id) {
+        const { rows } = await db.query(`
+            SELECT u.id, u.name, u.last_name, u.username, u.email, u.photo, u.phone, u.bio, u.country_id, u.city, u.is_admin, co.name as country_name
+            FROM users u
+            LEFT JOIN countries co ON co.id = u.country_id
+            WHERE u.id = $1
+        `, [id]);
+        return rows;
     }
 
-    getUserByEmail(email, callback) {
-        const sql = 'SELECT * FROM users WHERE email = ?';
-        db.query(sql, [email], callback);
+    async getUserByEmail(email) {
+        const { rows } = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+        return rows;
     }
 
-    createUser(user, callback) {
-        bcrypt.hash(user.password, 10, (err, hashedPassword) => {
-            if (err) {
-                return callback(err);
-            }
-            const sql = 'INSERT INTO users (name, email, password) VALUES (?, ?, ?)';
-            db.query(sql, [user.name, user.email, hashedPassword], callback);
-        });
+    async createUser(user) {
+        const hashedPassword = await bcrypt.hash(user.password, 10);
+        const { rows } = await db.query(
+            'INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING id',
+            [user.name, user.email, hashedPassword]
+        );
+        return { insertId: rows[0].id };
     }
 
-    updateUserData(id, user, callback) {
-        const sql = 'UPDATE users SET name = ?, email = ?, password = ? WHERE id = ?';
-        db.query(sql, [user.name, user.email, user.password, id], callback);
+    async updateUserData(id, user) {
+        const values = [user.name, user.last_name || null, user.username || null, user.email, user.phone || null, user.bio || null, user.country_id || null, user.city || null];
+
+        if (user.password) {
+            const hashed = await bcrypt.hash(user.password, 10);
+            return db.query(
+                `UPDATE users SET name=$1, last_name=$2, username=$3, email=$4, phone=$5, bio=$6, country_id=$7, city=$8, password=$9 WHERE id=$10`,
+                [...values, hashed, id]
+            );
+        }
+        return db.query(
+            `UPDATE users SET name=$1, last_name=$2, username=$3, email=$4, phone=$5, bio=$6, country_id=$7, city=$8 WHERE id=$9`,
+            [...values, id]
+        );
     }
 
-    updateProfilePicture(id, user, callback) {
-        const sql = 'UPDATE users SET Foto = ? WHERE id = ?';
-        db.query(sql, [user.foto, id], callback);
+    updatePhoto(id, photo) {
+        return db.query('UPDATE users SET photo = $1 WHERE id = $2', [photo, id]);
     }
 
-    deleteUser(id, callback) {
-        const sql = 'DELETE FROM users WHERE id = ?';
-        db.query(sql, [id], callback);
+    deleteUser(id) {
+        return db.query('DELETE FROM users WHERE id = $1', [id]);
     }
 }
 

@@ -1,0 +1,152 @@
+<!-- Navbar -->
+<nav class="navbar">
+  <button class="nav-back" (click)="goBack()">← Back</button>
+  <span class="nav-brand">Mercado :3</span>
+  <div class="nav-spacer"></div>
+</nav>
+
+<!-- Loading -->
+@if (loading) {
+  <div class="state-box">
+    <div class="spinner"></div>
+    <p>Loading item...</p>
+  </div>
+}
+
+<!-- Error -->
+@if (!loading && loadError) {
+  <div class="state-box">
+    <span class="state-icon">⚠️</span>
+    <p>{{ loadError }}</p>
+  </div>
+}
+
+<!-- Content -->
+@if (!loading && item) {
+  <main class="main">
+    <div class="detail-layout">
+
+      <!-- ── Gallery ── -->
+      <div class="gallery">
+        <div class="gallery-main" [class.no-photo]="!item.photos?.length">
+          @if (item.photos?.length > 0) {
+            <img [src]="item.photos[currentPhotoIndex].url" [alt]="item.name" />
+            @if (item.photos.length > 1) {
+              <button class="gallery-btn gallery-prev" (click)="prevPhoto()" [disabled]="currentPhotoIndex === 0">‹</button>
+              <button class="gallery-btn gallery-next" (click)="nextPhoto()" [disabled]="currentPhotoIndex === item.photos.length - 1">›</button>
+              <span class="gallery-counter">{{ currentPhotoIndex + 1 }} / {{ item.photos.length }}</span>
+            }
+          } @else {
+            <span class="gallery-placeholder">{{ item.name[0] }}</span>
+          }
+          <span [class]="'status-badge status-' + item.status">{{ STATUS_LABELS[item.status] }}</span>
+        </div>
+
+        @if (item.photos?.length > 1) {
+          <div class="gallery-thumbs">
+            @for (photo of item.photos; track photo.id; let i = $index) {
+              <button class="thumb" [class.active]="i === currentPhotoIndex" (click)="currentPhotoIndex = i">
+                <img [src]="photo.url" [alt]="item.name" />
+              </button>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- ── Info ── -->
+      <div class="info-col">
+        <div class="info-card">
+          <h1 class="item-title">{{ item.name }}</h1>
+          <p class="item-price">{{ item.price | currency:'EUR':'symbol':'1.0-2' }}</p>
+
+          <div class="badges-row">
+            @if (item.condition) {
+              <span class="badge badge-condition">{{ CONDITION_LABELS[item.condition] }}</span>
+            }
+            @if (item.category) {
+              <span class="badge badge-cat">{{ item.category }}</span>
+            }
+          </div>
+
+          @if (item.description) {
+            <p class="item-desc">{{ item.description }}</p>
+          }
+
+          <!-- Details -->
+          <div class="details-grid">
+            @if (item.weight_grams) {
+              <div class="detail-row">
+                <span class="detail-label">Weight</span>
+                <span class="detail-value">{{ formatWeight(item.weight_grams) }}</span>
+              </div>
+            }
+            @if (item.dimensions) {
+              <div class="detail-row">
+                <span class="detail-label">Dimensions</span>
+                <span class="detail-value">{{ item.dimensions }}</span>
+              </div>
+            }
+            @if (item.created_at) {
+              <div class="detail-row">
+                <span class="detail-label">Published</span>
+                <span class="detail-value">{{ item.created_at | date:'dd/MM/yyyy' }}</span>
+              </div>
+            }
+          </div>
+
+          <!-- Favorite button -->
+          @if (!isOwner) {
+            <button class="btn-favorite" [class.is-favorite]="isFavorite"
+              [disabled]="togglingFavorite" (click)="toggleFavorite()">
+              {{ isFavorite ? '♥ Saved' : '♡ Save' }}
+            </button>
+          }
+
+          <!-- Owner actions -->
+          @if (isOwner) {
+            <div class="owner-actions">
+              <p class="owner-label">Manage status</p>
+              <div class="status-btns">
+                <button class="btn-status" [class.active]="item.status === 'available'"
+                  [disabled]="item.status === 'available' || updatingStatus"
+                  (click)="setStatus('available')">Available</button>
+                <button class="btn-status btn-reserved" [class.active]="item.status === 'reserved'"
+                  [disabled]="item.status === 'reserved' || updatingStatus"
+                  (click)="setStatus('reserved')">Reserved</button>
+                <button class="btn-status btn-sold" [class.active]="item.status === 'sold'"
+                  [disabled]="item.status === 'sold' || updatingStatus"
+                  (click)="setStatus('sold')">Sold</button>
+              </div>
+              <button class="btn-delete" [disabled]="deleting" (click)="deleteItem()">
+                {{ deleting ? 'Deleting...' : 'Delete listing' }}
+              </button>
+            </div>
+          }
+        </div>
+
+        <!-- Seller card -->
+        @if (item.seller_name) {
+          <div class="seller-card">
+            <p class="seller-label">Seller</p>
+            <div class="seller-row">
+              <div class="seller-avatar">
+                @if (item.seller_photo) {
+                  <img [src]="item.seller_photo" [alt]="item.seller_name" />
+                } @else {
+                  {{ item.seller_name[0].toUpperCase() }}
+                }
+              </div>
+              <div>
+                <p class="seller-name">{{ item.seller_name }}</p>
+                @if (item.seller_username) {
+                  <p class="seller-username">&#64;{{ item.seller_username }}</p>
+                }
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+    </div>
+  </main>
+}

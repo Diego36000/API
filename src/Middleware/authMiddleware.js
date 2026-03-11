@@ -19,13 +19,8 @@ function verifyToken(req, res, next) {
     });
 }
 
-function verifyPassword(plainPassword, hashedPassword, callback) {
-    bcrypt.compare(plainPassword, hashedPassword, (err, isMatch) => {
-        if (err) {
-            return callback(err);
-        }
-        callback(null, isMatch);
-    });
+function verifyPassword(plainPassword, hashedPassword) {
+    return bcrypt.compare(plainPassword, hashedPassword);
 }
 
 export default { verifyToken, verifyPassword };

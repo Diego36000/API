@@ -1,0 +1,186 @@
+<!-- Navbar -->
+<nav class="navbar">
+  <a class="nav-brand">Mercado :3</a>
+
+  <div class="nav-search">
+    <input type="text" [(ngModel)]="searchQuery" name="search" placeholder="Search items..." />
+  </div>
+
+  <div class="nav-actions">
+    <button class="btn-sell" (click)="openModal()">+ Publish</button>
+    <button class="avatar" [title]="userName" (click)="goToProfile()">
+      @if (userPhoto) {
+        <img [src]="userPhoto" [alt]="userName" />
+      } @else {
+        {{ userInitial }}
+      }
+    </button>
+  </div>
+</nav>
+
+<!-- Main -->
+<main class="main">
+
+  @if (loadError) {
+    <div class="error-banner">{{ loadError }}</div>
+  }
+
+  <div class="section-header">
+    <h2>Items</h2>
+    <span class="count">{{ filteredItems.length }} results</span>
+  </div>
+
+  @if (loadingItems) {
+    <div class="state-box">
+      <div class="spinner"></div>
+      <p>Loading items...</p>
+    </div>
+  }
+
+  @if (!loadingItems && filteredItems.length === 0 && !loadError) {
+    <div class="state-box">
+      <span class="state-icon">📦</span>
+      <p>No items found.</p>
+    </div>
+  }
+
+  @if (!loadingItems && filteredItems.length > 0) {
+    <div class="items-grid">
+      @for (item of filteredItems; track item.id) {
+        <button class="item-card" (click)="openItem(item.id)">
+          <div class="card-img" [style.background]="getCardGradient(item.id)">
+            @if (item.photos?.length > 0) {
+              <img [src]="item.photos[0].url" [alt]="item.name" loading="lazy" />
+            } @else {
+              <span class="placeholder-letter">{{ item.name[0] }}</span>
+            }
+            <span [class]="'status-badge status-' + item.status">{{ item.status }}</span>
+          </div>
+          <div class="card-body">
+            <h3 class="card-title">{{ item.name }}</h3>
+            <p class="card-price">{{ item.price | currency:'EUR':'symbol':'1.0-2' }}</p>
+            <div class="card-meta">
+              @if (item.condition) {
+                <span class="tag tag-condition">{{ item.condition | titlecase }}</span>
+              }
+              @if (item.category) {
+                <span class="tag">{{ item.category }}</span>
+              }
+            </div>
+          </div>
+        </button>
+      }
+    </div>
+  }
+
+</main>
+
+<!-- Create Modal -->
+@if (showModal) {
+  <div class="modal-overlay" (click)="closeModal()" (keydown.escape)="closeModal()">
+    <dialog class="modal" open (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <h3>New listing</h3>
+        <button class="close-btn" type="button" (click)="closeModal()">×</button>
+      </div>
+
+      <form (ngSubmit)="onCreateItem()">
+        <div class="modal-body">
+
+          <div class="field full">
+            <label for="m-name">Title *</label>
+            <input id="m-name" type="text" [(ngModel)]="newItem.name" name="name"
+              placeholder="What are you selling?" required />
+          </div>
+
+          <div class="field full">
+            <label for="m-desc">Description</label>
+            <textarea id="m-desc" [(ngModel)]="newItem.description" name="description"
+              placeholder="Describe the item: condition, features..."></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="field">
+              <label for="m-price">Price (€) *</label>
+              <input id="m-price" type="number" [(ngModel)]="newItem.price" name="price"
+                placeholder="0.00" min="0" step="0.01" required />
+            </div>
+            <div class="field">
+              <label for="m-cat">Category</label>
+              <select id="m-cat" [(ngModel)]="newItem.category_id" name="category_id">
+                <option [ngValue]="null">No category</option>
+                @for (cat of categories; track cat.id) {
+                  <option [ngValue]="cat.id">{{ cat.name }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="field">
+              <label for="m-condition">Condition</label>
+              <select id="m-condition" [(ngModel)]="newItem.condition" name="condition">
+                <option value="">Not specified</option>
+                <option value="new">New</option>
+                <option value="like_new">Like new</option>
+                <option value="good">Good</option>
+                <option value="acceptable">Acceptable</option>
+                <option value="for_parts">For parts</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="field">
+              <label for="m-weight">Weight</label>
+              <div class="input-unit-row">
+                <input id="m-weight" type="number" [(ngModel)]="newItem.weightValue" name="weightValue"
+                  placeholder="0.000" min="0" step="0.001" />
+                <select [(ngModel)]="newItem.weightUnit" name="weightUnit">
+                  <option value="g">g</option>
+                  <option value="kg">kg</option>
+                  <option value="lb">lb</option>
+                  <option value="oz">oz</option>
+                </select>
+              </div>
+            </div>
+            <div class="field">
+              <label for="m-dim">Dimensions</label>
+              <input id="m-dim" type="text" [(ngModel)]="newItem.dimensions" name="dimensions"
+                placeholder="LxWxH e.g. 30x20x10 cm" />
+            </div>
+          </div>
+
+          <div class="field full">
+            <label for="m-photos">Photos</label>
+            <label class="file-drop" [class.has-files]="selectedFiles.length > 0">
+              <input id="m-photos" type="file" multiple accept="image/*" (change)="onFilesSelected($event)" />
+              @if (selectedFiles.length === 0) {
+                <span class="file-drop-hint">📷 Add photos <span class="file-drop-sub">JPG, PNG, WebP · max 10 MB</span></span>
+              } @else {
+                <span class="file-drop-hint">✓ {{ selectedFiles.length }} photo{{ selectedFiles.length > 1 ? 's' : '' }} selected</span>
+              }
+            </label>
+          </div>
+
+        </div>
+
+        @if (createError || createSuccess) {
+          <div class="modal-feedback">
+            @if (createError) { <div class="error-msg">{{ createError }}</div> }
+            @if (createSuccess) { <div class="success-msg">{{ createSuccess }}</div> }
+          </div>
+        }
+
+        <div class="modal-footer">
+          <button type="button" class="btn-cancel" (click)="closeModal()">Cancel</button>
+          <button type="submit" class="btn-submit" [disabled]="submitting">
+            {{ submitting ? 'Publishing...' : 'Publish listing →' }}
+          </button>
+        </div>
+      </form>
+
+    </dialog>
+  </div>
+}

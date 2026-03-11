@@ -1,0 +1,51 @@
+<div class="auth-wrap">
+
+  <div class="auth-left">
+    <div class="brand">
+      <div class="brand-logo">🏷️</div>
+      <h1>Mercado</h1>
+      <p class="tagline">Compra y vende lo que quieras,<br>donde quieras.</p>
+      <ul class="features">
+        <li><span class="check">✓</span> Sin comisiones en tus anuncios</li>
+        <li><span class="check">✓</span> Miles de artículos cerca de ti</li>
+        <li><span class="check">✓</span> Chat directo con vendedores</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="auth-right">
+    <div class="auth-card">
+      <div class="logo-mobile">🏷️ Mercado</div>
+
+      <h2>Bienvenido de nuevo</h2>
+      <p class="subtitle">Inicia sesión para continuar</p>
+
+      <form (ngSubmit)="onSubmit()">
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" type="email" [(ngModel)]="email" name="email"
+            placeholder="tú@ejemplo.com" required autocomplete="email" />
+        </div>
+
+        <div class="field">
+          <label for="password">Contraseña</label>
+          <input id="password" type="password" [(ngModel)]="password" name="password"
+            placeholder="••••••••" required autocomplete="current-password" />
+        </div>
+
+        @if (errorMessage) {
+          <div class="error-msg">{{ errorMessage }}</div>
+        }
+
+        <button type="submit" class="btn-primary" [disabled]="loading">
+          {{ loading ? 'Iniciando sesión...' : 'Iniciar sesión →' }}
+        </button>
+      </form>
+
+      <p class="auth-link">
+        ¿No tienes cuenta? <a routerLink="/register">Regístrate gratis</a>
+      </p>
+    </div>
+  </div>
+
+</div>

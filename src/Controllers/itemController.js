@@ -1,213 +1,175 @@
 import itemModel from '../Models/itemModel.js';
-import imageConverter from '../Utils/imageConverter.js';
+import fs from 'node:fs';
+import path from 'node:path';
 
-function getAllItems(req, res) {
-    itemModel.getAllItems((err, results) => {
-        if (err) {
-            return res.status(500).json({ error: 'Error fetching items' });
-        }
-        const items = results.map(item => ({
-            ...item,
-            Categorías: item.Categorías ? item.Categorías.split(', ') : [],
-            Fotos: item.Fotos ? JSON.parse(item.Fotos) : []
-        }));
-        
+const VALID_STATUSES = new Set(['available', 'reserved', 'sold']);
+const VALID_CONDITIONS = new Set(['new', 'like_new', 'good', 'acceptable', 'for_parts']);
+const DIMENSIONS_REGEX = /^\d+(\.\d+)?x\d+(\.\d+)?x\d+(\.\d+)?(\s*(cm|mm|m|in|ft))?$/i;
+
+function deleteUploadFile(filePath) {
+    if (!filePath) return;
+    const abs = path.join(process.cwd(), 'data', filePath);
+    fs.unlink(abs, () => {});
+}
+
+async function deleteItemFiles(itemId) {
+    const urls = await itemModel.getItemPhotos(itemId);
+    for (const url of urls) deleteUploadFile(url);
+}
+
+async function getAllItems(_req, res) {
+    try {
+        const items = await itemModel.getAllItems();
         res.status(200).json({ data: items });
-    });
-}
-
-function getItemById(req, res) {
-    const { itemId } = req.params;
-    
-    itemModel.getItemById(itemId, (err, results) => {
-        if (err) {
-            return res.status(500).json({ error: 'Error fetching item' });
-        }
-        
-        if (results.length === 0) {
-            return res.status(404).json({ error: 'Item not found' });
-        }
-        
-        const item = {
-            ...results[0],
-            Categorías: results[0].Categorías ? results[0].Categorías.split(', ') : [],
-            Fotos: results[0].Fotos ? JSON.parse(results[0].Fotos) : []
-        };
-        
-        res.status(200).json({ data: item });
-    });
-}
-
-function getItemsByVendor(req, res) {
-    const { vendor } = req.params;
-    
-    itemModel.getItemsByVendor(vendor, (err, results) => {
-        if (err) {
-            return res.status(500).json({ error: 'Error fetching vendor items' });
-        }
-        
-        if (results.length === 0) {
-            return res.status(404).json({ error: 'No items found for this vendor' });
-        }
-        
-        const items = results.map(item => ({
-            ...item,
-            Categorías: item.Categorías ? item.Categorías.split(', ') : [],
-            Fotos: item.Fotos ? JSON.parse(item.Fotos) : []
-        }));
-        
-        res.status(200).json({ data: items });
-    });
-}
-
-function createItem(req, res) {
-    const { nombre, descripcion, precio, peso, dimensiones, categorias } = req.body;
-    const vendedor = req.userId;
-    if (!nombre || !descripcion || !precio || !peso || !dimensiones) {
-        return res.status(400).json({ error: 'Missing required fields: nombre, descripcion, precio, peso, dimensiones' });
+    } catch {
+        res.status(500).json({ error: 'Error fetching items' });
     }
-    
-    if (isNaN(precio) || precio <= 0) {
-        return res.status(400).json({ error: 'Price must be a positive number' });
-    }
-    
-    itemModel.createItem({
-        nombre,
-        descripcion,
-        precio,
-        vendedor,
-        categorias: categorias || '',
-        peso,
-        dimensiones
-    }, (err, results) => {
-        if (err) {
-            return res.status(500).json({ error: 'Error creating item' });
-        }
-        
-        res.status(201).json({
-            message: 'Item created successfully',
-            itemId: results.insertId
-        });
-    });
 }
 
-function updateItem(req, res) {
+async function getItemById(req, res) {
     const { itemId } = req.params;
-    const { nombre, descripcion, precio, peso, dimensiones, categorias } = req.body;
+    try {
+        const results = await itemModel.getItemById(itemId);
+        if (results.length === 0) return res.status(404).json({ error: 'Item not found' });
+        res.status(200).json({ data: results[0] });
+    } catch {
+        res.status(500).json({ error: 'Error fetching item' });
+    }
+}
+
+async function getItemsBySeller(req, res) {
+    const { sellerId } = req.params;
+    try {
+        const results = await itemModel.getItemsBySeller(sellerId);
+        if (results.length === 0) return res.status(404).json({ error: 'No items found for this seller' });
+        res.status(200).json({ data: results });
+    } catch {
+        res.status(500).json({ error: 'Error fetching seller items' });
+    }
+}
+
+function validateItemFields({ name, price, dimensions, condition }) {
+    if (!name || !price) return 'Missing required fields: name, price';
+    if (Number.isNaN(Number(price)) || Number(price) <= 0) return 'Price must be a positive number';
+    if (dimensions && !DIMENSIONS_REGEX.test(dimensions)) return 'dimensions must be in format LxWxH (e.g. 30x20x10 cm)';
+    if (condition && !VALID_CONDITIONS.has(condition)) return 'condition must be one of: new, like_new, good, acceptable, for_parts';
+    return null;
+}
+
+async function createItem(req, res) {
+    const { name, description, price, weight_grams, dimensions, condition, category_id } = req.body;
+    const seller_id = req.userId;
+
+    const validationError = validateItemFields({ name, price, dimensions, condition });
+    if (validationError) return res.status(400).json({ error: validationError });
+
+    try {
+        const result = await itemModel.createItem({ name, description, price, seller_id, category_id, weight_grams, dimensions, condition });
+        res.status(201).json({ message: 'Item created successfully', itemId: result.insertId });
+    } catch {
+        res.status(500).json({ error: 'Error creating item' });
+    }
+}
+
+async function updateItem(req, res) {
+    const { itemId } = req.params;
+    const { name, description, price, weight_grams, dimensions, condition, category_id, status } = req.body;
     const userId = req.userId;
-    itemModel.getItemById(itemId, (err, results) => {
-        if (err) {
-            return res.status(500).json({ error: 'Error fetching item' });
-        }
-        
-        if (results.length === 0) {
-            return res.status(404).json({ error: 'Item not found' });
-        }
-        
+
+    try {
+        const results = await itemModel.getItemById(itemId);
+        if (results.length === 0) return res.status(404).json({ error: 'Item not found' });
+
         const item = results[0];
-        
-        if (item.Vendedor !== userId) {
-            return res.status(403).json({ error: 'You can only update your own items' });
+        if (item.seller_id !== userId) return res.status(403).json({ error: 'You can only update your own items' });
+
+        const validationError = validateItemFields({ name, price, dimensions, condition });
+        if (validationError) return res.status(400).json({ error: validationError });
+
+        const finalStatus = status || item.status;
+        if (!VALID_STATUSES.has(finalStatus)) {
+            return res.status(400).json({ error: 'status must be one of: available, reserved, sold' });
         }
-        
-        if (!nombre || !descripcion || !precio || !peso || !dimensiones) {
-            return res.status(400).json({ error: 'Missing required fields' });
-        }
-        
-        if (isNaN(precio) || precio <= 0) {
-            return res.status(400).json({ error: 'Price must be a positive number' });
-        }
-        
-        itemModel.updateItem(itemId, {
-            nombre,
-            descripcion,
-            precio,
-            vendedor: userId,
-            categorias: categorias || item.Categorías,
-            peso,
-            dimensiones
-        }, (err) => {
-            if (err) {
-                return res.status(500).json({ error: 'Error updating item' });
-            }
-            
-            res.status(200).json({ message: 'Item updated successfully' });
+
+        await itemModel.updateItem(itemId, {
+            name, description, price,
+            category_id: category_id === undefined ? item.category_id : category_id,
+            weight_grams: weight_grams === undefined ? item.weight_grams : weight_grams,
+            dimensions: dimensions === undefined ? item.dimensions : dimensions,
+            condition: condition === undefined ? item.condition : condition,
+            status: finalStatus
         });
-    });
+        res.status(200).json({ message: 'Item updated successfully' });
+    } catch {
+        res.status(500).json({ error: 'Error updating item' });
+    }
 }
 
-function uploadItemPictures(req, res) {
+async function updateItemStatus(req, res) {
+    const { itemId } = req.params;
+    const { status } = req.body;
+    const userId = req.userId;
+
+    if (!status || !VALID_STATUSES.has(status)) {
+        return res.status(400).json({ error: 'status must be one of: available, reserved, sold' });
+    }
+
+    try {
+        const results = await itemModel.getItemById(itemId);
+        if (results.length === 0) return res.status(404).json({ error: 'Item not found' });
+        if (results[0].seller_id !== userId) return res.status(403).json({ error: 'You can only update your own items' });
+
+        await itemModel.updateItemStatus(itemId, status);
+        res.status(200).json({ message: 'Item status updated', status });
+    } catch {
+        res.status(500).json({ error: 'Error updating item status' });
+    }
+}
+
+async function uploadItemPhotos(req, res) {
     const { itemId } = req.params;
     const userId = req.userId;
+
     if (!req.files || req.files.length === 0) {
         return res.status(400).json({ error: 'No image files provided' });
     }
-    
-    itemModel.getItemById(itemId, (err, results) => {
-        if (err) {
-            return res.status(500).json({ error: 'Error fetching item' });
-        }
-        
-        if (results.length === 0) {
-            return res.status(404).json({ error: 'Item not found' });
-        }
-        
+
+    try {
+        const results = await itemModel.getItemById(itemId);
+        if (results.length === 0) return res.status(404).json({ error: 'Item not found' });
+
         const item = results[0];
-        if (item.Vendedor !== userId) {
-            return res.status(403).json({ error: 'You can only upload pictures to your own items' });
-        }
-        const base64Images = req.files.map(file => imageConverter.fileToBase64(file));
-        const photosJSON = JSON.stringify(base64Images);
-        itemModel.updateItemPictures(itemId, photosJSON, (err) => {
-            if (err) {
-                return res.status(500).json({ error: 'Error uploading item pictures' });
-            }
-            
-            res.status(200).json({
-                message: 'Item pictures uploaded successfully',
-                itemId: itemId,
-                photosCount: base64Images.length
-            });
-        });
-    });
+        if (item.seller_id !== userId) return res.status(403).json({ error: 'You can only upload photos to your own items' });
+
+        await deleteItemFiles(itemId);
+        await itemModel.deleteItemPhotos(itemId);
+
+        const urls = req.files.map(file => `/uploads/${file.filename}`);
+        await itemModel.addItemPhotos(itemId, urls);
+
+        res.status(200).json({ message: 'Item photos uploaded successfully', itemId, photosCount: urls.length });
+    } catch {
+        res.status(500).json({ error: 'Error uploading item photos' });
+    }
 }
 
-function deleteItem(req, res) {
+async function deleteItem(req, res) {
     const { itemId } = req.params;
     const userId = req.userId;
-    itemModel.getItemById(itemId, (err, results) => {
-        if (err) {
-            return res.status(500).json({ error: 'Error fetching item' });
-        }
-        
-        if (results.length === 0) {
-            return res.status(404).json({ error: 'Item not found' });
-        }
-        
+
+    try {
+        const results = await itemModel.getItemById(itemId);
+        if (results.length === 0) return res.status(404).json({ error: 'Item not found' });
+
         const item = results[0];
-        if (item.Vendedor !== userId) {
-            return res.status(403).json({ error: 'You can only delete your own items' });
-        }
-        
-        itemModel.deleteItem(itemId, (err) => {
-            if (err) {
-                return res.status(500).json({ error: 'Error deleting item' });
-            }
-            
-            res.status(200).json({
-                message: 'Item deleted successfully',
-                itemId: itemId
-            });
-        });
-    });
+        if (item.seller_id !== userId) return res.status(403).json({ error: 'You can only delete your own items' });
+
+        await deleteItemFiles(itemId);
+        await itemModel.deleteItem(itemId);
+        res.status(200).json({ message: 'Item deleted successfully', itemId });
+    } catch {
+        res.status(500).json({ error: 'Error deleting item' });
+    }
 }
 
-export default {
-    getAllItems,
-    getItemById,
-    getItemsByVendor,
-    createItem,
-    updateItem,
-    uploadItemPictures,
-    deleteItem
-};
+export default { getAllItems, getItemById, getItemsBySeller, createItem, updateItem, updateItemStatus, uploadItemPhotos, deleteItem };

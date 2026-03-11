@@ -8,10 +8,11 @@ const router = express.Router();
 router.get('/', itemController.getAllItems);
 router.get('/:itemId', itemController.getItemById);
 
-router.get('/vendor/:vendor', authMiddleware.verifyToken, itemController.getItemsByVendor);
+router.get('/seller/:sellerId', authMiddleware.verifyToken, itemController.getItemsBySeller);
 router.post('/', authMiddleware.verifyToken, itemController.createItem);
 router.put('/:itemId', authMiddleware.verifyToken, itemController.updateItem);
-router.post('/:itemId/upload-picture', authMiddleware.verifyToken, upload.array('fotos'), itemController.uploadItemPictures);
+router.patch('/:itemId/status', authMiddleware.verifyToken, itemController.updateItemStatus);
+router.post('/:itemId/upload-photos', authMiddleware.verifyToken, upload.array('photos'), itemController.uploadItemPhotos);
 router.delete('/:itemId', authMiddleware.verifyToken, itemController.deleteItem);
 
 export default router;

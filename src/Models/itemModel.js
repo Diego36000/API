@@ -1,59 +1,81 @@
 import db from '../Config/dbConfig.js';
 
+const BASE_QUERY = `
+    SELECT i.*, c.name as category,
+        u.name as seller_name, u.photo as seller_photo, u.username as seller_username,
+        COALESCE(
+            json_agg(json_build_object('id', p.id, 'url', p.url, 'order', p."order") ORDER BY p."order")
+            FILTER (WHERE p.id IS NOT NULL), '[]'
+        ) as photos
+    FROM items i
+    LEFT JOIN categories c ON i.category_id = c.id
+    LEFT JOIN users u ON u.id = i.seller_id
+    LEFT JOIN item_photos p ON p.item_id = i.id
+`;
+
 class Item {
 
-    getAllItems(callback) {
-        const sql = 'SELECT * FROM items';
-        db.query(sql, callback);
+    async getAllItems() {
+        const { rows } = await db.query(`${BASE_QUERY} GROUP BY i.id, c.name, u.name, u.photo, u.username`);
+        return rows;
     }
 
-    getItemById(id, callback) {
-        const sql = 'SELECT * FROM items WHERE ID = ?';
-        db.query(sql, [id], callback);
+    async getItemById(id) {
+        const { rows } = await db.query(
+            `${BASE_QUERY} WHERE i.id = $1 GROUP BY i.id, c.name, u.name, u.photo, u.username`,
+            [id]
+        );
+        return rows;
     }
 
-    getItemsByVendor(vendor, callback) {
-        const sql = 'SELECT * FROM items WHERE Vendedor = ?';
-        db.query(sql, [vendor], callback);
+    async getItemsBySeller(sellerId) {
+        const { rows } = await db.query(
+            `${BASE_QUERY} WHERE i.seller_id = $1 GROUP BY i.id, c.name, u.name, u.photo, u.username`,
+            [sellerId]
+        );
+        return rows;
     }
 
-    createItem(item, callback) {
-        const sql = 'INSERT INTO items (Nombre, Descripción, Precio, Vendedor, Categorías, Peso, Dimensiones) VALUES (?, ?, ?, ?, ?, ?)';
-        db.query(sql, [
-            item.nombre, 
-            item.descripcion, 
-            item.precio, 
-            item.vendedor,
-            item.categorias,
-            item.peso, 
-            item.dimensiones
-        ], callback);
+    async createItem(item) {
+        const { rows } = await db.query(
+            'INSERT INTO items (name, description, price, seller_id, category_id, weight_grams, dimensions, condition, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id',
+            [item.name, item.description, item.price, item.seller_id, item.category_id || null, item.weight_grams ?? null, item.dimensions || null, item.condition || null, item.status || 'available']
+        );
+        return { insertId: rows[0].id };
     }
 
-    updateItem(id, item, callback) {
-        const sql = 'UPDATE items SET Nombre = ?, Descripción = ?, Precio = ?, Vendedor = ?, Categorías = ?, Peso = ?, Dimensiones = ? WHERE ID = ?';
-        db.query(sql, [
-            item.nombre,
-            item.descripcion,
-            item.precio,
-            item.vendedor,
-            item.categorias,
-            item.peso,
-            item.dimensiones,
-            id
-        ], callback);
+    updateItem(id, item) {
+        return db.query(
+            'UPDATE items SET name=$1, description=$2, price=$3, category_id=$4, weight_grams=$5, dimensions=$6, condition=$7, status=$8 WHERE id=$9',
+            [item.name, item.description, item.price, item.category_id || null, item.weight_grams ?? null, item.dimensions || null, item.condition || null, item.status, id]
+        );
     }
 
-    updateItemPictures(id, fotos, callback) {
-        const sql = 'UPDATE items SET Fotos = ? WHERE ID = ?';
-        db.query(sql, [fotos, id], callback);
+    updateItemStatus(id, status) {
+        return db.query('UPDATE items SET status = $1 WHERE id = $2', [status, id]);
     }
 
-    deleteItem(id, callback) {
-        const sql = 'DELETE FROM items WHERE ID = ?';
-        db.query(sql, [id], callback);
+    async getItemPhotos(itemId) {
+        const { rows } = await db.query('SELECT url FROM item_photos WHERE item_id = $1', [itemId]);
+        return rows.map(r => r.url);
     }
 
+    async addItemPhotos(itemId, urls) {
+        for (let i = 0; i < urls.length; i++) {
+            await db.query(
+                'INSERT INTO item_photos (item_id, url, "order") VALUES ($1, $2, $3)',
+                [itemId, urls[i], i]
+            );
+        }
+    }
+
+    deleteItemPhotos(itemId) {
+        return db.query('DELETE FROM item_photos WHERE item_id = $1', [itemId]);
+    }
+
+    deleteItem(id) {
+        return db.query('DELETE FROM items WHERE id = $1', [id]);
+    }
 }
 
 export default new Item();
