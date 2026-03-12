@@ -10,6 +10,8 @@ import bodyParser from 'body-parser';
 import dotenv from 'dotenv';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import swaggerJsdoc from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express';
 
 dotenv.config();
 
@@ -20,7 +22,30 @@ const app = express();
 const host = process.env.API_HOST;
 const port = process.env.API_PORT;
 
+const swaggerSpec = swaggerJsdoc({
+    definition: {
+        openapi: '3.0.0',
+        info: {
+            title: 'API',
+            version: '1.0.0',
+        },
+        components: {
+            securitySchemes: {
+                bearerAuth: {
+                    type: 'http',
+                    scheme: 'bearer',
+                    bearerFormat: 'JWT',
+                },
+            },
+        },
+        security: [{ bearerAuth: [] }],
+    },
+    apis: ['./src/Routes/*.js'],
+});
+
 app.use(bodyParser.json());
+
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use('/api/users', userRoutes);
 app.use('/api/items', itemRoutes);
