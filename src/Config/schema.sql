@@ -146,3 +146,8 @@ INSERT INTO categories (name) VALUES
 ('Sexual stuff'),
 ('Other')
 ON CONFLICT (name) DO NOTHING;
+
+-- Admin user seed
+INSERT INTO users (name, email, password, is_admin) VALUES
+('Admin', 'admin@admin.com', '$2b$10$Pk3eY5ma1POvL12heRlDKOj.TAtWVkwxuWpcPKmragA90OEMczhEK', TRUE)
+ON CONFLICT (email) DO UPDATE SET password = EXCLUDED.password;

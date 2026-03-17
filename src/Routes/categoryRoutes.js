@@ -41,7 +41,7 @@ const router = express.Router();
  *         description: Categoría creada
  */
 router.get('/', categoryController.getAllCategories);
-router.post('/', authMiddleware.verifyToken, categoryController.createCategory);
+router.post('/', authMiddleware.verifyToken, authMiddleware.verifyAdmin, categoryController.createCategory);
 
 /**
  * @swagger
@@ -61,6 +61,6 @@ router.post('/', authMiddleware.verifyToken, categoryController.createCategory);
  *       200:
  *         description: Categoría eliminada
  */
-router.delete('/:categoryId', authMiddleware.verifyToken, categoryController.deleteCategory);
+router.delete('/:categoryId', authMiddleware.verifyToken, authMiddleware.verifyAdmin, categoryController.deleteCategory);
 
 export default router;

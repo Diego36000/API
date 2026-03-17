@@ -8,6 +8,7 @@ export class ApiService {
   private readonly TOKEN_KEY = 'auth_token';
   private readonly NAME_KEY = 'user_name';
   private readonly USER_ID_KEY = 'user_id';
+  private readonly IS_ADMIN_KEY = 'is_admin';
 
   private authHeaders(): HttpHeaders {
     return new HttpHeaders({ Authorization: `Bearer ${this.getToken()}` });
@@ -22,10 +23,11 @@ export class ApiService {
     return this.http.post('/api/users/register', { name, email, password });
   }
 
-  saveToken(token: string, name?: string, userId?: number): void {
+  saveToken(token: string, name?: string, userId?: number, isAdmin?: boolean): void {
     localStorage.setItem(this.TOKEN_KEY, token);
     if (name) localStorage.setItem(this.NAME_KEY, name);
     if (userId != null) localStorage.setItem(this.USER_ID_KEY, String(userId));
+    if (isAdmin != null) localStorage.setItem(this.IS_ADMIN_KEY, isAdmin ? 'true' : 'false');
   }
 
   getToken(): string | null {
@@ -41,13 +43,22 @@ export class ApiService {
     return id ? Number(id) : null;
   }
 
+  isAdmin(): boolean {
+    return localStorage.getItem(this.IS_ADMIN_KEY) === 'true';
+  }
+
   logout(): void {
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.NAME_KEY);
     localStorage.removeItem(this.USER_ID_KEY);
+    localStorage.removeItem(this.IS_ADMIN_KEY);
   }
 
   // ── Users ─────────────────────────────────────────────
+  getAllUsers(): Observable<any> {
+    return this.http.get('/api/users', { headers: this.authHeaders() });
+  }
+
   getUser(userId: number): Observable<any> {
     return this.http.get(`/api/users/${userId}`, { headers: this.authHeaders() });
   }
@@ -58,6 +69,10 @@ export class ApiService {
     city?: string; password?: string;
   }): Observable<any> {
     return this.http.put(`/api/users/${userId}`, data, { headers: this.authHeaders() });
+  }
+
+  deleteUser(userId: number): Observable<any> {
+    return this.http.delete(`/api/users/${userId}`, { headers: this.authHeaders() });
   }
 
   uploadProfilePhoto(userId: number, file: File): Observable<any> {
@@ -113,6 +128,14 @@ export class ApiService {
   // ── Categories ────────────────────────────────────────
   getCategories(): Observable<any> {
     return this.http.get('/api/categories');
+  }
+
+  createCategory(name: string): Observable<any> {
+    return this.http.post('/api/categories', { name }, { headers: this.authHeaders() });
+  }
+
+  deleteCategory(categoryId: number): Observable<any> {
+    return this.http.delete(`/api/categories/${categoryId}`, { headers: this.authHeaders() });
   }
 
   // ── Locations ─────────────────────────────────────────

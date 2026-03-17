@@ -7,6 +7,9 @@
   </div>
 
   <div class="nav-actions">
+    @if (isAdmin) {
+      <button class="btn-admin" (click)="goToAdmin()">⚙️ Admin</button>
+    }
     <button class="btn-sell" (click)="openModal()">+ Publish</button>
     <button class="avatar" [title]="userName" (click)="goToProfile()">
       @if (userPhoto) {

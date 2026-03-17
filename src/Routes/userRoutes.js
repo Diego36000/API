@@ -80,7 +80,7 @@ router.post('/login', userController.login);
  *       200:
  *         description: Lista de usuarios
  */
-router.get('/', authMiddleware.verifyToken, userController.getAllUsers);
+router.get('/', authMiddleware.verifyToken, authMiddleware.verifyAdmin, userController.getAllUsers);
 
 /**
  * @swagger

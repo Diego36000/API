@@ -24,8 +24,8 @@ export class LoginComponent {
     this.loading = true;
     this.api.login(this.email, this.password).subscribe({
       next: (res: any) => {
-        this.api.saveToken(res.token, res.name, res.userId);
-        this.router.navigate(['/items']);
+        this.api.saveToken(res.token, res.name, res.userId, res.isAdmin);
+        this.router.navigate([res.isAdmin ? '/admin' : '/items']);
       },
       error: (err: any) => {
         this.errorMessage = err?.error?.error || 'Error al iniciar sesión.';

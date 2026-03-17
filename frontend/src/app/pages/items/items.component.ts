@@ -40,6 +40,7 @@ export class ItemsComponent implements OnInit {
   userName = '';
   userInitial = '';
   userPhoto = '';
+  isAdmin = false;
 
   newItem = {
     name: '',
@@ -68,6 +69,7 @@ export class ItemsComponent implements OnInit {
     }
     this.userName = this.api.getUserName();
     this.userInitial = this.userName ? this.userName[0].toUpperCase() : '?';
+    this.isAdmin = this.api.isAdmin();
     this.loadItems();
     this.loadCategories();
     const userId = this.api.getUserId();
@@ -178,6 +180,10 @@ export class ItemsComponent implements OnInit {
 
   goToProfile(): void {
     this.router.navigate(['/profile']);
+  }
+
+  goToAdmin(): void {
+    this.router.navigate(['/admin']);
   }
 
   logout(): void {

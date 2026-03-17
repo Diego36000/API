@@ -59,6 +59,20 @@
   gap: 12px;
 }
 
+.btn-admin {
+  padding: 9px 16px;
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+  border-radius: 99px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s;
+
+  &:hover { background: #fde68a; }
+}
+
 .btn-sell {
   padding: 9px 20px;
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
@@ -82,10 +96,8 @@
 .avatar {
   width: 38px;
   height: 38px;
-  border-width: 1px;
-  border-color: gray;
+  border: 1px solid gray;
   border-radius: 50%;
-  background: linear-gradient(135deg, #3730a3, #6d28d9);
   display: flex;
   align-items: center;
   justify-content: center;

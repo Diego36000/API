@@ -1,4 +1,6 @@
 import express from 'express';
+import https from 'node:https';
+import fs from 'node:fs';
 import userRoutes from './src/Routes/userRoutes.js';
 import itemRoutes from './src/Routes/itemRoutes.js';
 import categoryRoutes from './src/Routes/categoryRoutes.js';
@@ -12,6 +14,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
+import selfsigned from 'selfsigned';
 
 dotenv.config();
 
@@ -63,6 +66,22 @@ app.get('{*splat}', (_req, res) => {
     res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
-app.listen(port, host, () => {
-    console.log(`Server running on http://${host}:${port}`);
+const CERT_KEY_PATH = path.join(__dirname, 'data', 'cert.key');
+const CERT_CRT_PATH = path.join(__dirname, 'data', 'cert.crt');
+
+let sslKey, sslCert;
+if (fs.existsSync(CERT_KEY_PATH) && fs.existsSync(CERT_CRT_PATH)) {
+    sslKey = fs.readFileSync(CERT_KEY_PATH);
+    sslCert = fs.readFileSync(CERT_CRT_PATH);
+} else {
+    const pems = selfsigned.generate([{ name: 'commonName', value: 'localhost' }], { days: 365 });
+    fs.mkdirSync(path.join(__dirname, 'data'), { recursive: true });
+    fs.writeFileSync(CERT_KEY_PATH, pems.private);
+    fs.writeFileSync(CERT_CRT_PATH, pems.cert);
+    sslKey = pems.private;
+    sslCert = pems.cert;
+}
+
+https.createServer({ key: sslKey, cert: sslCert }, app).listen(port, host, () => {
+    console.log(`HTTPS server running on https://${host}:${port}`);
 });

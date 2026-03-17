@@ -1,0 +1,237 @@
+<div class="admin-layout">
+
+  <!-- Navbar -->
+  <nav class="admin-nav">
+    <div class="nav-inner">
+      <div class="nav-brand">
+        <span class="brand-icon">⚙️</span>
+        <span class="brand-text">Panel de Administración</span>
+      </div>
+      <div class="nav-actions">
+        <button class="btn-nav" (click)="goToItems()">← Volver a la tienda</button>
+        <div class="user-chip">
+          <span class="user-initial">{{ userInitial }}</span>
+          <span class="user-name">{{ userName }}</span>
+        </div>
+        <button class="btn-logout" (click)="logout()">Cerrar sesión</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Content -->
+  <main class="admin-main">
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn" [class.active]="activeTab === 'users'" (click)="setTab('users')">
+        👥 Usuarios <span class="tab-badge">{{ users.length }}</span>
+      </button>
+      <button class="tab-btn" [class.active]="activeTab === 'categories'" (click)="setTab('categories')">
+        🏷️ Categorías <span class="tab-badge">{{ categories.length }}</span>
+      </button>
+    </div>
+
+    <!-- ── USERS ── -->
+    @if (activeTab === 'users') {
+      <div class="card">
+        <div class="card-header">
+          <h2>Gestión de usuarios</h2>
+          <button class="btn-refresh" (click)="loadUsers()" [disabled]="loadingUsers">↻ Actualizar</button>
+        </div>
+
+        @if (usersError) {
+          <div class="alert-error">{{ usersError }}</div>
+        }
+
+        @if (loadingUsers) {
+          <div class="loading">Cargando usuarios…</div>
+        } @else {
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre</th>
+                  <th>Usuario</th>
+                  <th>Email</th>
+                  <th>Ciudad</th>
+                  <th>Rol</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (user of users; track user.id) {
+                  <tr [class.row-admin]="user.is_admin">
+                    <td class="cell-id">{{ user.id }}</td>
+                    <td>
+                      <div class="user-cell">
+                        @if (user.photo) {
+                          <img [src]="user.photo" class="user-avatar" alt="foto" />
+                        } @else {
+                          <div class="user-avatar-placeholder">{{ user.name?.[0]?.toUpperCase() }}</div>
+                        }
+                        <span>{{ user.name }} {{ user.last_name }}</span>
+                      </div>
+                    </td>
+                    <td class="cell-muted">{{ user.username || '—' }}</td>
+                    <td>{{ user.email }}</td>
+                    <td class="cell-muted">{{ user.city || '—' }}</td>
+                    <td>
+                      @if (user.is_admin) {
+                        <span class="badge badge-admin">Admin</span>
+                      } @else {
+                        <span class="badge badge-user">Usuario</span>
+                      }
+                    </td>
+                    <td>
+                      <div class="action-btns">
+                        <button class="btn-edit" (click)="openEdit(user)" title="Editar usuario">✏️</button>
+                        <button
+                          class="btn-delete"
+                          (click)="deleteUser(user.id, user.name)"
+                          [disabled]="deletingUserId === user.id || user.is_admin"
+                          [title]="user.is_admin ? 'No se puede eliminar un admin' : 'Eliminar usuario'"
+                        >
+                          {{ deletingUserId === user.id ? '…' : '🗑️' }}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          @if (users.length === 0) {
+            <p class="empty">No hay usuarios registrados.</p>
+          }
+        }
+      </div>
+    }
+
+    <!-- ── CATEGORIES ── -->
+    @if (activeTab === 'categories') {
+      <div class="card">
+        <div class="card-header">
+          <h2>Gestión de categorías</h2>
+        </div>
+
+        <!-- Add form -->
+        <div class="add-form">
+          <input
+            type="text"
+            class="input"
+            placeholder="Nombre de la nueva categoría"
+            [(ngModel)]="newCategoryName"
+            (keydown.enter)="addCategory()"
+            maxlength="60"
+          />
+          <button class="btn-primary" (click)="addCategory()" [disabled]="addingCategory || !newCategoryName.trim()">
+            {{ addingCategory ? 'Añadiendo…' : '+ Añadir' }}
+          </button>
+        </div>
+        @if (addCategoryError) {
+          <div class="alert-error">{{ addCategoryError }}</div>
+        }
+
+        @if (categoriesError) {
+          <div class="alert-error">{{ categoriesError }}</div>
+        }
+
+        @if (loadingCategories) {
+          <div class="loading">Cargando categorías…</div>
+        } @else {
+          <ul class="category-list">
+            @for (cat of categories; track cat.id) {
+              <li class="category-item">
+                <span class="cat-id">#{{ cat.id }}</span>
+                <span class="cat-name">{{ cat.name }}</span>
+                <button
+                  class="btn-delete"
+                  (click)="deleteCategory(cat.id, cat.name)"
+                  [disabled]="deletingCategoryId === cat.id"
+                >
+                  {{ deletingCategoryId === cat.id ? '…' : '🗑️' }}
+                </button>
+              </li>
+            }
+          </ul>
+          @if (categories.length === 0) {
+            <p class="empty">No hay categorías.</p>
+          }
+        }
+      </div>
+    }
+
+  </main>
+
+  <!-- ── EDIT USER MODAL ── -->
+  @if (editingUser) {
+    <div class="modal-backdrop" (click)="closeEdit()" (keydown.escape)="closeEdit()">
+      <div class="edit-modal" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()" aria-labelledby="edit-modal-title">
+        <div class="modal-header">
+          <h3 id="edit-modal-title">Editar usuario #{{ editingUser.id }}</h3>
+          <button class="modal-close" (click)="closeEdit()">✕</button>
+        </div>
+
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="edit-name">Nombre *</label>
+              <input id="edit-name" class="input" type="text" [(ngModel)]="editForm.name" maxlength="100" />
+            </div>
+            <div class="form-group">
+              <label for="edit-last-name">Apellido</label>
+              <input id="edit-last-name" class="input" type="text" [(ngModel)]="editForm.last_name" maxlength="100" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="edit-username">Usuario</label>
+              <input id="edit-username" class="input" type="text" [(ngModel)]="editForm.username" maxlength="50" />
+            </div>
+            <div class="form-group">
+              <label for="edit-email">Email *</label>
+              <input id="edit-email" class="input" type="email" [(ngModel)]="editForm.email" maxlength="150" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="edit-phone">Teléfono</label>
+              <input id="edit-phone" class="input" type="text" [(ngModel)]="editForm.phone" maxlength="30" />
+            </div>
+            <div class="form-group">
+              <label for="edit-city">Ciudad</label>
+              <input id="edit-city" class="input" type="text" [(ngModel)]="editForm.city" maxlength="100" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="edit-bio">Biografía</label>
+            <textarea id="edit-bio" class="input textarea" [(ngModel)]="editForm.bio" rows="3" maxlength="500"></textarea>
+          </div>
+
+          @if (saveUserError) {
+            <div class="alert-error">{{ saveUserError }}</div>
+          }
+          @if (saveUserSuccess) {
+            <div class="alert-success">¡Guardado correctamente!</div>
+          }
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn-cancel" (click)="closeEdit()">Cancelar</button>
+          <button
+            class="btn-primary"
+            (click)="saveUser()"
+            [disabled]="savingUser || !editForm.name || !editForm.email"
+          >
+            {{ savingUser ? 'Guardando…' : 'Guardar cambios' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+</div>

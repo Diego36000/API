@@ -9,7 +9,7 @@ services:
     ports:
       - "${DATABASE_PORT}:5432"
     volumes:
-      - ./data/pgdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "psql -U ${DATABASE_USER} -d ${DATABASE_NAME} -c 'SELECT 1' > /dev/null 2>&1"]
       interval: 5s
@@ -40,3 +40,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
+
+volumes:
+  pgdata:
