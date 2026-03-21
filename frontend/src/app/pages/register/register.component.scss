@@ -1,3 +1,4 @@
+/* Register shares the same visual design as login */
 .auth-wrap {
   display: flex;
   min-height: 100vh;
@@ -5,11 +6,11 @@
 
 .auth-left {
   flex: 1;
-  background: linear-gradient(145deg, #4f46e5 0%, #7c3aed 60%, #a855f7 100%);
+  background: var(--text);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 48px;
+  padding: 64px 56px;
   position: relative;
   overflow: hidden;
 
@@ -17,205 +18,245 @@
     content: '';
     position: absolute;
     inset: 0;
-    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Ccircle cx='30' cy='30' r='20'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    background-image:
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 48px 48px;
   }
 
-  @media (max-width: 768px) { display: none; }
+  &::after {
+    content: '';
+    position: absolute;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(99,102,241,0.25) 0%, transparent 70%);
+    bottom: -80px;
+    left: -80px;
+    pointer-events: none;
+  }
+
+  @media (max-width: 800px) { display: none; }
 }
 
 .brand {
   color: white;
-  text-align: center;
   position: relative;
   z-index: 1;
+  max-width: 380px;
 
-  .brand-logo {
-    width: 72px;
-    height: 72px;
-    background: rgba(255,255,255,0.15);
-    border: 2px solid rgba(255,255,255,0.3);
-    border-radius: 22px;
-    display: flex;
+  .brand-mark {
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
-    font-size: 34px;
-    margin: 0 auto 24px;
+    gap: 10px;
+    margin-bottom: 48px;
+
+    .brand-dot {
+      width: 10px;
+      height: 10px;
+      background: var(--primary);
+      border-radius: 50%;
+      box-shadow: 0 0 20px rgba(99,102,241,0.6);
+    }
+
+    .brand-name {
+      font-size: 12px;
+      font-weight: 700;
+      opacity: 0.6;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
   }
 
   h1 {
-    font-size: 38px;
+    font-size: clamp(36px, 4vw, 52px);
     font-weight: 800;
-    letter-spacing: -1px;
-    margin-bottom: 10px;
+    letter-spacing: -1.5px;
+    margin-bottom: 16px;
+    line-height: 1.05;
   }
 
   .tagline {
-    font-size: 16px;
-    opacity: 0.75;
-    margin-bottom: 48px;
-    line-height: 1.5;
+    font-size: 17px;
+    color: rgba(255, 255, 255, 0.78);
+    margin-bottom: 56px;
+    line-height: 1.6;
+    font-weight: 400;
   }
 
   .features {
     list-style: none;
-    text-align: left;
-    display: inline-flex;
+    display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 18px;
 
     li {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
       font-size: 14px;
-      opacity: 0.9;
+      opacity: 0.8;
 
       .check {
-        width: 24px;
-        height: 24px;
-        background: rgba(255,255,255,0.2);
-        border-radius: 50%;
+        width: 22px;
+        height: 22px;
+        background: rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 6px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 12px;
+        font-size: 11px;
         flex-shrink: 0;
+        color: #6EE7B7;
       }
     }
   }
 }
 
 .auth-right {
-  width: 480px;
+  width: 500px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 48px;
-  background: white;
+  padding: 60px 56px;
+  background: var(--surface);
 
-  @media (max-width: 768px) {
+  @media (max-width: 800px) {
     width: 100%;
-    padding: 32px 24px;
-    background: linear-gradient(145deg, #4f46e5 0%, #7c3aed 100%);
+    padding: 48px 24px;
+    background: var(--bg);
     align-items: flex-start;
-    padding-top: 64px;
+    padding-top: 72px;
   }
 }
 
 .auth-card {
   width: 100%;
-  max-width: 360px;
-  animation: slideUp 0.4s ease;
+  max-width: 380px;
+  animation: slideUp var(--duration-slow) var(--ease) both;
 
-  @media (max-width: 768px) {
-    background: white;
-    border-radius: 24px;
-    padding: 32px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  @media (max-width: 800px) {
+    background: var(--surface);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--border);
+    padding: 36px 28px;
+    box-shadow: var(--shadow-lg);
   }
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(16px); }
+  from { opacity: 0; transform: translateY(20px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
 .logo-mobile {
   display: none;
-  text-align: center;
-  font-size: 24px;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
   font-weight: 800;
-  color: var(--primary);
+  color: var(--text);
   margin-bottom: 28px;
   letter-spacing: -0.5px;
 
-  @media (max-width: 768px) { display: block; }
+  .logo-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--primary);
+    border-radius: 50%;
+  }
+
+  @media (max-width: 800px) { display: flex; }
 }
 
-h2 {
+.auth-heading {
   font-size: 26px;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--text);
-  margin-bottom: 4px;
-  letter-spacing: -0.5px;
+  margin-bottom: 6px;
+  letter-spacing: -0.6px;
 }
 
 .subtitle {
-  color: var(--text-2);
+  color: var(--text-3);
   font-size: 14px;
-  margin-bottom: 28px;
+  margin-bottom: 32px;
 }
 
 .field {
-  margin-bottom: 18px;
+  margin-bottom: 20px;
 
   label {
     display: block;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text);
-    margin-bottom: 6px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-2);
+    margin-bottom: 7px;
   }
 
   input {
     width: 100%;
-    padding: 12px 14px;
+    padding: 12px 15px;
     border: 1.5px solid var(--border);
     border-radius: var(--radius);
     font-size: 15px;
     color: var(--text);
     background: var(--bg);
-    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    transition: border-color var(--duration) var(--ease),
+                box-shadow var(--duration) var(--ease),
+                background var(--duration) var(--ease);
     outline: none;
 
     &::placeholder { color: var(--text-3); }
+
     &:focus {
       border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
-      background: white;
+      box-shadow: 0 0 0 3px var(--primary-glow);
+      background: var(--surface);
     }
   }
 }
 
 .error-msg {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  background: var(--red-light);
+  border: 1px solid var(--red-border);
   color: var(--red);
   border-radius: var(--radius);
   padding: 11px 14px;
   font-size: 13px;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 .btn-primary {
   width: 100%;
   padding: 13px;
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  background: var(--text);
   color: white;
   border: none;
   border-radius: var(--radius);
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
-  margin-top: 6px;
-  box-shadow: 0 4px 14px rgba(99,102,241,0.35);
+  transition: background var(--duration-fast),
+              transform var(--duration-fast) var(--ease-spring),
+              box-shadow var(--duration) var(--ease);
+  margin-top: 4px;
 
   &:hover:not(:disabled) {
-    opacity: 0.9;
+    background: #2C2927;
     transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(99,102,241,0.4);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
   }
 
   &:active:not(:disabled) { transform: translateY(0); }
-  &:disabled { opacity: 0.55; cursor: not-allowed; box-shadow: none; }
+  &:disabled { opacity: 0.45; cursor: not-allowed; }
 }
 
 .auth-link {
   text-align: center;
-  margin-top: 22px;
-  color: var(--text-2);
+  margin-top: 24px;
+  color: var(--text-3);
   font-size: 14px;
+
+  a { color: var(--primary); font-weight: 500; }
 }

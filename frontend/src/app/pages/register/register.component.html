@@ -2,41 +2,47 @@
 
   <div class="auth-left">
     <div class="brand">
-      <div class="brand-logo">🏷️</div>
-      <h1>Mercado</h1>
-      <p class="tagline">Tu próxima gran compra<br>está a un clic de distancia.</p>
+      <div class="brand-mark">
+        <span class="brand-dot"></span>
+        <span class="brand-name">Mercado</span>
+      </div>
+      <h1>Start selling<br>today.</h1>
+      <p class="tagline">Join thousands of people buying<br>and selling every day.</p>
       <ul class="features">
-        <li><span class="check">✓</span> Gratis para publicar</li>
-        <li><span class="check">✓</span> Llega a miles de compradores</li>
-        <li><span class="check">✓</span> Gestiona todo desde un lugar</li>
+        <li><span class="check">✓</span> Free to publish listings</li>
+        <li><span class="check">✓</span> Reach thousands of buyers</li>
+        <li><span class="check">✓</span> Manage everything in one place</li>
       </ul>
     </div>
   </div>
 
   <div class="auth-right">
     <div class="auth-card">
-      <div class="logo-mobile">🏷️ Mercado</div>
+      <div class="logo-mobile">
+        <span class="logo-dot"></span>
+        Mercado
+      </div>
 
-      <h2>Crear cuenta</h2>
-      <p class="subtitle">Empieza a comprar y vender hoy</p>
+      <h2 class="auth-heading">Create account</h2>
+      <p class="subtitle">Start buying and selling today</p>
 
       <form (ngSubmit)="onSubmit()">
         <div class="field">
-          <label for="name">Nombre</label>
+          <label for="name">Name</label>
           <input id="name" type="text" [(ngModel)]="name" name="name"
-            placeholder="Tu nombre" required autocomplete="name" />
+            placeholder="Your name" required autocomplete="name" />
         </div>
 
         <div class="field">
           <label for="email">Email</label>
           <input id="email" type="email" [(ngModel)]="email" name="email"
-            placeholder="tú@ejemplo.com" required autocomplete="email" />
+            placeholder="you@example.com" required autocomplete="email" />
         </div>
 
         <div class="field">
-          <label for="password">Contraseña</label>
+          <label for="password">Password</label>
           <input id="password" type="password" [(ngModel)]="password" name="password"
-            placeholder="Mínimo 8 caracteres" required autocomplete="new-password" />
+            placeholder="At least 8 characters" required autocomplete="new-password" />
         </div>
 
         @if (errorMessage) {
@@ -44,12 +50,12 @@
         }
 
         <button type="submit" class="btn-primary" [disabled]="loading">
-          {{ loading ? 'Creando cuenta...' : 'Crear cuenta →' }}
+          {{ loading ? 'Creating account...' : 'Create account' }}
         </button>
       </form>
 
       <p class="auth-link">
-        ¿Ya tienes cuenta? <a routerLink="/login">Iniciar sesión</a>
+        Already have an account? <a routerLink="/login">Sign in</a>
       </p>
     </div>
   </div>
