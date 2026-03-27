@@ -20,7 +20,7 @@ async function startConversation(req, res) {
         const items = await itemModel.getItemById(item_id);
         if (items.length === 0) return res.status(404).json({ error: 'Item not found' });
 
-        const seller_id = items[0].vendedor;
+        const seller_id = items[0].seller_id;
         if (!seller_id) return res.status(400).json({ error: 'Item has no seller' });
         if (seller_id === buyer_id) return res.status(400).json({ error: 'You cannot start a conversation with yourself' });
 

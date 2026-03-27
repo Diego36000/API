@@ -1,0 +1,113 @@
+<!-- Navbar -->
+<nav class="navbar">
+  <button class="nav-back" (click)="goBack()">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    Back
+  </button>
+  <div class="nav-brand">
+    <div class="brand-icon">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
+        <path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>
+      </svg>
+    </div>
+    Marketplace
+  </div>
+  <div class="nav-spacer"></div>
+</nav>
+
+<!-- Loading -->
+@if (loading) {
+  <div class="state-box">
+    <div class="spinner"></div>
+    <p>Loading profile...</p>
+  </div>
+}
+
+<!-- Error -->
+@if (!loading && loadError) {
+  <div class="state-box">
+    <p class="state-error">{{ loadError }}</p>
+  </div>
+}
+
+<!-- Content -->
+@if (!loading && user) {
+  <main class="main">
+
+    <!-- Profile header -->
+    <div class="profile-header">
+      <div class="avatar-wrap">
+        @if (user.photo) {
+          <img [src]="user.photo" [alt]="user.name" class="avatar-img" />
+        } @else {
+          <div class="avatar-placeholder">{{ user.name?.[0]?.toUpperCase() }}</div>
+        }
+      </div>
+
+      <div class="profile-info">
+        <h1 class="profile-name">{{ user.name }}{{ user.last_name ? ' ' + user.last_name : '' }}</h1>
+        @if (user.username) {
+          <p class="profile-username">&#64;{{ user.username }}</p>
+        }
+        @if (user.city || user.country) {
+          <p class="profile-location">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+            {{ locationStr }}
+          </p>
+        }
+        @if (user.bio) {
+          <p class="profile-bio">{{ user.bio }}</p>
+        }
+        <p class="profile-stat">{{ items.length }} listing{{ items.length !== 1 ? 's' : '' }}</p>
+      </div>
+
+      @if (!isOwnProfile && isLoggedIn) {
+        <button class="btn-contact" (click)="contactUser()" [disabled]="startingConv || items.length === 0">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          {{ startingConv ? 'Opening...' : 'Send message' }}
+        </button>
+      }
+    </div>
+
+    <!-- Listings -->
+    <div class="listings-section">
+      <h2 class="listings-title">Listings</h2>
+
+      @if (items.length === 0) {
+        <div class="empty-state">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+          <p>No listings yet.</p>
+        </div>
+      }
+
+      <div class="items-grid">
+        @for (item of items; track item.id) {
+          <button class="item-card" (click)="openItem(item.id)">
+            <div class="card-img" [style.background]="getCardGradient(item.id)">
+              @if (item.photos?.length > 0) {
+                <img [src]="item.photos[0].url" [alt]="item.name" loading="lazy" />
+              } @else {
+                <span class="placeholder-letter">{{ item.name[0] }}</span>
+              }
+              <span [class]="'status-badge status-' + item.status">{{ STATUS_LABELS[item.status] }}</span>
+            </div>
+            <div class="card-body">
+              <p class="card-price">{{ item.price | currency:'EUR':'symbol':'1.0-2' }}</p>
+              <h3 class="card-title">{{ item.name }}</h3>
+              <div class="card-meta">
+                @if (item.condition) {
+                  <span class="tag tag-condition">{{ CONDITION_LABELS[item.condition] }}</span>
+                }
+                @if (item.category) {
+                  <span class="tag">{{ item.category }}</span>
+                }
+              </div>
+            </div>
+          </button>
+        }
+      </div>
+    </div>
+
+  </main>
+}

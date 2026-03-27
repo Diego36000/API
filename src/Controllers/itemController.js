@@ -17,12 +17,32 @@ async function deleteItemFiles(itemId) {
     for (const url of urls) deleteUploadFile(url);
 }
 
-async function getAllItems(_req, res) {
+async function getAllItems(req, res) {
+    const { search, category_id, status, condition, country, page = 1, limit = 24 } = req.query;
     try {
-        const items = await itemModel.getAllItems();
-        res.status(200).json({ data: items });
+        const { items, total } = await itemModel.getItemsFiltered(
+            {
+                search: search || null,
+                category_id: category_id ? Number(category_id) : null,
+                status: status && VALID_STATUSES.has(status) ? status : null,
+                condition: condition && VALID_CONDITIONS.has(condition) ? condition : null,
+                country: country || null,
+            },
+            Math.max(1, Number(page)),
+            Math.min(100, Math.max(1, Number(limit)))
+        );
+        res.status(200).json({ data: items, total, page: Number(page), limit: Number(limit) });
     } catch {
         res.status(500).json({ error: 'Error fetching items' });
+    }
+}
+
+async function getSellerCountries(_req, res) {
+    try {
+        const countries = await itemModel.getSellerCountries();
+        res.status(200).json({ data: countries });
+    } catch {
+        res.status(500).json({ error: 'Error fetching countries' });
     }
 }
 
@@ -172,4 +192,4 @@ async function deleteItem(req, res) {
     }
 }
 
-export default { getAllItems, getItemById, getItemsBySeller, createItem, updateItem, updateItemStatus, uploadItemPhotos, deleteItem };
+export default { getAllItems, getSellerCountries, getItemById, getItemsBySeller, createItem, updateItem, updateItemStatus, uploadItemPhotos, deleteItem };

@@ -4,14 +4,18 @@ class Conversation {
 
     async getConversationsByUser(userId) {
         const { rows } = await db.query(
-            `SELECT c.*, i.nombre as item_nombre,
-                buyer.name as buyer_name, seller.name as seller_name
+            `SELECT c.id, c.item_id, c.buyer_id, c.seller_id,
+                i.name as item_name,
+                buyer.name as buyer_name, buyer.photo as buyer_photo,
+                seller.name as seller_name, seller.photo as seller_photo,
+                (SELECT content FROM messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_message,
+                (SELECT created_at FROM messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_message_at
              FROM conversations c
              LEFT JOIN items i ON c.item_id = i.id
              JOIN users buyer ON c.buyer_id = buyer.id
              JOIN users seller ON c.seller_id = seller.id
              WHERE c.buyer_id = $1 OR c.seller_id = $1
-             ORDER BY c.id DESC`,
+             ORDER BY last_message_at DESC NULLS LAST`,
             [userId]
         );
         return rows;

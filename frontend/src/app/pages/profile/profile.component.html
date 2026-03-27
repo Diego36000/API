@@ -1,10 +1,18 @@
 <!-- Navbar -->
 <nav class="navbar">
-  <button class="nav-back" (click)="goBack()">← Back</button>
-  <span class="nav-brand">
-    <span class="brand-dot"></span>
+  <button class="nav-back" (click)="goBack()">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    Back
+  </button>
+  <a class="nav-brand">
+    <div class="brand-icon">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
+        <path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>
+      </svg>
+    </div>
     Mercado
-  </span>
+  </a>
   <div class="nav-spacer"></div>
 </nav>
 
@@ -21,48 +29,81 @@
   <main class="main">
     <div class="profile-layout">
 
-      <!-- ── Left: Avatar card ── -->
-      <aside class="profile-card">
-        <div class="avatar-wrap">
-          <div class="avatar-circle">
-            @if (user.photo) {
-              <img [src]="user.photo" [alt]="user.name" />
-            } @else {
-              <span>{{ userInitial }}</span>
-            }
-            @if (uploadingPhoto) {
-              <div class="avatar-uploading">⏳</div>
-            }
+      <!-- ── LEFT: Identity card ── -->
+      <aside class="identity-card">
+
+        <!-- Avatar -->
+        <div class="avatar-section">
+          <div class="avatar-ring">
+            <div class="avatar-circle">
+              @if (user.photo) {
+                <img [src]="user.photo" [alt]="user.name" />
+              } @else {
+                <span>{{ userInitial }}</span>
+              }
+              @if (uploadingPhoto) {
+                <div class="avatar-uploading">
+                  <div class="spinner-sm"></div>
+                </div>
+              }
+            </div>
           </div>
-          <label class="avatar-change-btn" title="Change photo">
-            📷
+          <label class="avatar-change" title="Change photo">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
             <input type="file" accept="image/*" (change)="onPhotoChange($event)" />
           </label>
         </div>
 
-        <h2 class="profile-name">{{ userDisplayName }}</h2>
-        @if (user.username) {
-          <p class="profile-apodo">&#64;{{ user.username }}</p>
-        }
-        <p class="profile-email">{{ user.email }}</p>
-        @if (user.city || user.country_name) {
-          <p class="profile-location">📍 {{ user.city }}{{ user.city && user.country_name ? ', ' : '' }}{{ user.country_name }}</p>
-        }
-        @if (user.bio) {
-          <p class="profile-bio">{{ user.bio }}</p>
-        }
+        <!-- Identity -->
+        <div class="identity-info">
+          <h2 class="profile-name">{{ userDisplayName }}</h2>
+          @if (user.username) {
+            <p class="profile-username">&#64;{{ user.username }}</p>
+          }
+          <p class="profile-email">{{ user.email }}</p>
 
+          @if (user.city || user.country_name) {
+            <div class="profile-location">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+              {{ user.city }}{{ user.city && user.country_name ? ', ' : '' }}{{ user.country_name }}
+            </div>
+          }
+
+          @if (user.bio) {
+            <p class="profile-bio">{{ user.bio }}</p>
+          }
+        </div>
+
+        <button class="btn-nav-link" (click)="goToFavorites()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          Saved items
+        </button>
+        <button class="btn-nav-link" (click)="goToMessages()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Messages
+        </button>
+        @if (isAdmin) {
+          <button class="btn-admin-link" (click)="goToAdmin()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+            Admin panel
+          </button>
+        }
         <button class="btn-logout" (click)="logout()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
           Sign out
         </button>
       </aside>
 
-      <!-- ── Right: Edit form ── -->
-      <section class="profile-form-wrap">
-        <h3 class="form-title">Edit profile</h3>
+      <!-- ── RIGHT: Edit form ── -->
+      <section class="edit-section">
+        <div class="section-header">
+          <h3 class="section-title">Edit profile</h3>
+          <p class="section-sub">Update your personal information</p>
+        </div>
 
         <form (ngSubmit)="onSave()">
 
+          <div class="form-group-label">Personal</div>
           <div class="form-row">
             <div class="field">
               <label for="p-name">First name *</label>
@@ -76,8 +117,11 @@
 
           <div class="form-row">
             <div class="field">
-              <label for="p-username">username</label>
-              <input id="p-username" type="text" [(ngModel)]="editData.username" name="username" placeholder="username" />
+              <label for="p-username">Username</label>
+              <div class="input-prefix-wrap">
+                <span class="input-prefix">&#64;</span>
+                <input id="p-username" type="text" [(ngModel)]="editData.username" name="username" placeholder="username" class="has-prefix" />
+              </div>
             </div>
             <div class="field">
               <label for="p-phone">Phone</label>
@@ -85,11 +129,13 @@
             </div>
           </div>
 
+          <div class="form-group-label">Contact</div>
           <div class="field">
             <label for="p-email">Email *</label>
             <input id="p-email" type="email" [(ngModel)]="editData.email" name="email" placeholder="you@example.com" required />
           </div>
 
+          <div class="form-group-label">Location</div>
           <div class="form-row">
             <div class="field">
               <label for="p-country">Country</label>
@@ -106,25 +152,50 @@
             </div>
           </div>
 
+          <div class="form-group-label">About</div>
           <div class="field">
             <label for="p-bio">Bio</label>
-            <textarea id="p-bio" [(ngModel)]="editData.bio" name="bio" placeholder="Tell us something about yourself..." rows="3"></textarea>
+            <textarea id="p-bio" [(ngModel)]="editData.bio" name="bio" placeholder="Tell something about yourself..." rows="3"></textarea>
           </div>
 
+          <div class="form-group-label">Security</div>
           <div class="field">
-            <label for="p-pass">New password <span class="optional">(optional)</span></label>
-            <input id="p-pass" type="password" [(ngModel)]="editData.password" name="password" placeholder="Leave empty to keep current" />
+            <label for="p-cur-pass">Current password</label>
+            <input id="p-cur-pass" type="password" [(ngModel)]="editData.currentPassword" name="currentPassword" placeholder="Enter your current password" autocomplete="current-password" />
+          </div>
+          <div class="field">
+            <label for="p-new-pass">
+              New password
+              <span class="label-hint">— leave empty to keep current</span>
+            </label>
+            <input id="p-new-pass" type="password" [(ngModel)]="editData.newPassword" name="newPassword" placeholder="New password" autocomplete="new-password" />
+          </div>
+          <div class="field">
+            <label for="p-confirm-pass">Confirm new password</label>
+            <input id="p-confirm-pass" type="password" [(ngModel)]="editData.confirmPassword" name="confirmPassword" placeholder="Repeat new password" autocomplete="new-password" />
           </div>
 
           @if (saveError) {
-            <div class="msg error-msg">{{ saveError }}</div>
+            <div class="alert alert-error">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+              {{ saveError }}
+            </div>
           }
           @if (saveSuccess) {
-            <div class="msg success-msg">{{ saveSuccess }}</div>
+            <div class="alert alert-success">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+              {{ saveSuccess }}
+            </div>
           }
 
           <button type="submit" class="btn-save" [disabled]="saving">
-            {{ saving ? 'Saving...' : 'Save changes →' }}
+            @if (saving) {
+              <span class="btn-spinner"></span>
+              Saving...
+            } @else {
+              Save changes
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            }
           </button>
         </form>
       </section>

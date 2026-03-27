@@ -1,0 +1,126 @@
+<div class="messages-layout">
+
+  <!-- Sidebar: conversation list -->
+  <aside class="conv-sidebar">
+    <div class="sidebar-header">
+      <button class="nav-back" (click)="goBack()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <span class="sidebar-title">Messages</span>
+    </div>
+
+    @if (loadingConvs) {
+      <div class="conv-loading">
+        <div class="spinner"></div>
+      </div>
+    } @else if (convsError) {
+      <p class="conv-error">{{ convsError }}</p>
+    } @else if (conversations.length === 0) {
+      <div class="conv-empty">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <p>No conversations yet.</p>
+      </div>
+    } @else {
+      <ul class="conv-list">
+        @for (conv of conversations; track conv.id) {
+          <li>
+            <button class="conv-item" [class.active]="selectedConv?.id === conv.id"
+              (click)="selectConversation(conv)">
+              <div class="conv-avatar">
+                @if (getOtherUser(conv).photo) {
+                  <img [src]="getOtherUser(conv).photo" [alt]="getOtherUser(conv).name" />
+                } @else {
+                  {{ getOtherUser(conv).name[0].toUpperCase() }}
+                }
+              </div>
+              <div class="conv-meta">
+                <p class="conv-name">{{ getOtherUser(conv).name }}</p>
+                <p class="conv-preview">{{ conv.item_name ? '· ' + conv.item_name : '' }}</p>
+                @if (conv.last_message) {
+                  <p class="conv-last">{{ conv.last_message }}</p>
+                }
+              </div>
+            </button>
+          </li>
+        }
+      </ul>
+    }
+  </aside>
+
+  <!-- Chat area -->
+  <div class="chat-area">
+    @if (!selectedConv) {
+      <div class="chat-empty">
+        <div class="chat-empty-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <p>Select a conversation to start chatting</p>
+      </div>
+    } @else {
+      <!-- Chat header -->
+      <div class="chat-header">
+        <div class="chat-header-user">
+          <div class="chat-avatar">
+            @if (getOtherUser(selectedConv).photo) {
+              <img [src]="getOtherUser(selectedConv).photo" [alt]="getOtherUser(selectedConv).name" />
+            } @else {
+              {{ getOtherUser(selectedConv).name[0].toUpperCase() }}
+            }
+          </div>
+          <div>
+            <p class="chat-header-name">{{ getOtherUser(selectedConv).name }}</p>
+            @if (selectedConv.item_name) {
+              <button class="chat-header-item" (click)="openItem(selectedConv.item_id)">
+                {{ selectedConv.item_name }}
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Messages -->
+      <div class="messages-body">
+        @if (loadingMessages) {
+          <div class="msg-loading">
+            <div class="spinner"></div>
+          </div>
+        } @else if (messages.length === 0) {
+          <div class="msg-empty">
+            <p>No messages yet. Say hi!</p>
+          </div>
+        } @else {
+          @for (msg of messages; track msg.id) {
+            <div class="msg-row" [class.mine]="msg.sender_id === currentUserId">
+              <div class="msg-bubble">
+                <p class="msg-content">{{ msg.content }}</p>
+                <span class="msg-time">{{ msg.created_at | date:'HH:mm' }}</span>
+              </div>
+            </div>
+          }
+          <div #messagesEnd></div>
+        }
+      </div>
+
+      <!-- Input -->
+      <div class="chat-input-area">
+        @if (sendError) {
+          <p class="send-error">{{ sendError }}</p>
+        }
+        <div class="chat-input-row">
+          <textarea class="chat-input" [(ngModel)]="messageText" name="messageText"
+            placeholder="Type a message..." rows="1"
+            (keydown)="onKeydown($event)"></textarea>
+          <button class="btn-send" (click)="sendMessage()" [disabled]="!messageText.trim() || sending">
+            @if (sending) {
+              <div class="spinner-sm"></div>
+            } @else {
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+            }
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+
+</div>

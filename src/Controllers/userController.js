@@ -23,10 +23,6 @@ async function login(req, res) {
         return res.status(400).json({ error: 'Invalid email format' });
     }
 
-    if (typeof password !== 'string' || password.length < 8) {
-        return res.status(400).json({ error: 'Password must be at least 8 characters' });
-    }
-
     try {
         const results = await userModel.getUserByEmail(email);
 
@@ -42,12 +38,12 @@ async function login(req, res) {
         }
 
         const token = jwt.sign(
-            { id: user.id, email: user.email, is_admin: user.is_admin === true },
+            { id: user.id, email: user.email, is_admin: !!user.is_admin },
             process.env.JWT_SECRET,
             { expiresIn: '8h' }
         );
 
-        res.status(200).json({ message: 'Login successful', token, userId: user.id, name: user.name, isAdmin: user.is_admin === true });
+        res.status(200).json({ message: 'Login successful', token, userId: user.id, name: user.name, isAdmin: !!user.is_admin });
     } catch {
         res.status(500).json({ error: 'Error during login' });
     }
@@ -156,6 +152,27 @@ async function uploadProfilePhoto(req, res) {
     }
 }
 
+async function setAdmin(req, res) {
+    const { userId } = req.params;
+    const { is_admin } = req.body;
+
+    if (typeof is_admin !== 'boolean') {
+        return res.status(400).json({ error: 'is_admin must be a boolean' });
+    }
+
+    if (Number(userId) === Number(req.userId)) {
+        return res.status(400).json({ error: 'You cannot change your own admin status' });
+    }
+
+    try {
+        const result = await userModel.setAdmin(userId, is_admin);
+        if (result.rowCount === 0) return res.status(404).json({ error: 'User not found' });
+        res.status(200).json({ message: `User ${is_admin ? 'granted' : 'revoked'} admin access` });
+    } catch {
+        res.status(500).json({ error: 'Error updating admin status' });
+    }
+}
+
 async function deleteUser(req, res) {
     const { userId } = req.params;
     const adminId = req.userId;
@@ -184,4 +201,4 @@ async function deleteUser(req, res) {
     }
 }
 
-export default { getAllUsers, getUserById, register, login, updateUser, uploadProfilePhoto, deleteUser };
+export default { getAllUsers, getUserById, register, login, updateUser, uploadProfilePhoto, setAdmin, deleteUser };

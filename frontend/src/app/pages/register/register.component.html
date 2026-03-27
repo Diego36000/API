@@ -1,60 +1,127 @@
 <div class="auth-wrap">
 
   <div class="auth-left">
-    <div class="brand">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+
+    <div class="brand-hero">
       <div class="brand-mark">
-        <span class="brand-dot"></span>
-        <span class="brand-name">Mercado</span>
+        <div class="brand-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
+            <path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>
+          </svg>
+        </div>
+        <span>Mercado</span>
       </div>
-      <h1>Start selling<br>today.</h1>
-      <p class="tagline">Join thousands of people buying<br>and selling every day.</p>
-      <ul class="features">
-        <li><span class="check">✓</span> Free to publish listings</li>
-        <li><span class="check">✓</span> Reach thousands of buyers</li>
-        <li><span class="check">✓</span> Manage everything in one place</li>
+
+      <h1 class="hero-title">Start selling<br><span class="gradient-text">today.</span></h1>
+      <p class="hero-sub">Join thousands of people buying and selling every day.</p>
+
+      <ul class="feature-list">
+        <li>
+          <div class="feature-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          </div>
+          Free to publish listings
+        </li>
+        <li>
+          <div class="feature-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          </div>
+          Reach thousands of buyers
+        </li>
+        <li>
+          <div class="feature-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          </div>
+          Manage everything in one place
+        </li>
       </ul>
     </div>
   </div>
 
   <div class="auth-right">
     <div class="auth-card">
+
       <div class="logo-mobile">
-        <span class="logo-dot"></span>
+        <div class="brand-icon-sm">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
+            <path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>
+          </svg>
+        </div>
         Mercado
       </div>
 
       <h2 class="auth-heading">Create account</h2>
-      <p class="subtitle">Start buying and selling today</p>
+      <p class="auth-sub">Start buying and selling for free</p>
 
       <form (ngSubmit)="onSubmit()">
         <div class="field">
-          <label for="name">Name</label>
-          <input id="name" type="text" [(ngModel)]="name" name="name"
-            placeholder="Your name" required autocomplete="name" />
+          <label for="name">Full name</label>
+          <div class="input-wrap">
+            <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/>
+            </svg>
+            <input id="name" type="text" [(ngModel)]="name" name="name"
+              placeholder="Your name" required autocomplete="name" />
+          </div>
         </div>
 
         <div class="field">
-          <label for="email">Email</label>
-          <input id="email" type="email" [(ngModel)]="email" name="email"
-            placeholder="you@example.com" required autocomplete="email" />
+          <label for="email">Email address</label>
+          <div class="input-wrap">
+            <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+            </svg>
+            <input id="email" type="email" [(ngModel)]="email" name="email"
+              placeholder="you@example.com" required autocomplete="email" />
+          </div>
         </div>
 
         <div class="field">
           <label for="password">Password</label>
-          <input id="password" type="password" [(ngModel)]="password" name="password"
-            placeholder="At least 8 characters" required autocomplete="new-password" />
+          <div class="input-wrap">
+            <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            <input id="password" type="password" [(ngModel)]="password" name="password"
+              placeholder="At least 8 characters" required autocomplete="new-password" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="confirmPassword">Confirm password</label>
+          <div class="input-wrap">
+            <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            <input id="confirmPassword" type="password" [(ngModel)]="confirmPassword" name="confirmPassword"
+              placeholder="Repeat your password" required autocomplete="new-password" />
+          </div>
         </div>
 
         @if (errorMessage) {
-          <div class="error-msg">{{ errorMessage }}</div>
+          <div class="error-msg">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+            {{ errorMessage }}
+          </div>
         }
 
         <button type="submit" class="btn-primary" [disabled]="loading">
-          {{ loading ? 'Creating account...' : 'Create account' }}
+          @if (loading) {
+            <span class="btn-spinner"></span>
+            Creating account...
+          } @else {
+            Create account
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          }
         </button>
       </form>
 
-      <p class="auth-link">
+      <p class="auth-footer">
         Already have an account? <a routerLink="/login">Sign in</a>
       </p>
     </div>

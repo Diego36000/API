@@ -18,9 +18,20 @@ export class AdminComponent implements OnInit {
 
   // Users
   users: any[] = [];
+  get adminCount(): number { return this.users.filter(u => u.is_admin).length; }
   loadingUsers = false;
   usersError = '';
   deletingUserId: number | null = null;
+
+  togglingAdminId: number | null = null;
+
+  // Confirm dialog
+  confirmDialog: { show: boolean; title: string; message: string; danger: boolean; action: (() => void) | null } =
+    { show: false, title: '', message: '', danger: true, action: null };
+
+  // Alert toast
+  alertMsg = '';
+  private alertTimer: any = null;
 
   // Edit modal
   editingUser: any = null;
@@ -72,8 +83,13 @@ export class AdminComponent implements OnInit {
         this.loadingUsers = false;
       },
       error: (err: any) => {
-        this.usersError = err?.error?.error || 'Error loading users.';
         this.loadingUsers = false;
+        if (err.status === 403) {
+          this.api.logout();
+          this.router.navigate(['/login']);
+        } else {
+          this.usersError = err?.error?.error || 'Error loading users.';
+        }
       },
     });
   }
@@ -125,19 +141,62 @@ export class AdminComponent implements OnInit {
     });
   }
 
+  openConfirm(title: string, message: string, danger: boolean, action: () => void): void {
+    this.confirmDialog = { show: true, title, message, danger, action };
+  }
+
+  doConfirm(): void {
+    const action = this.confirmDialog.action;
+    this.confirmDialog = { show: false, title: '', message: '', danger: true, action: null };
+    action?.();
+  }
+
+  closeConfirm(): void {
+    this.confirmDialog = { show: false, title: '', message: '', danger: true, action: null };
+  }
+
+  showAlert(msg: string): void {
+    this.alertMsg = msg;
+    clearTimeout(this.alertTimer);
+    this.alertTimer = setTimeout(() => { this.alertMsg = ''; }, 4000);
+  }
+
+  toggleAdmin(user: any): void {
+    const newValue = !user.is_admin;
+    const action = newValue ? 'grant admin to' : 'revoke admin from';
+    this.openConfirm(
+      newValue ? 'Grant admin access' : 'Revoke admin access',
+      `Are you sure you want to ${action} "${user.name}"?`,
+      !newValue,
+      () => {
+        this.togglingAdminId = user.id;
+        this.api.setUserAdmin(user.id, newValue).subscribe({
+          next: () => { user.is_admin = newValue; this.togglingAdminId = null; },
+          error: (err: any) => {
+            this.showAlert(err?.error?.error || 'Error updating admin status.');
+            this.togglingAdminId = null;
+          },
+        });
+      }
+    );
+  }
+
   deleteUser(userId: number, userName: string): void {
-    if (!confirm(`¿Eliminar al usuario "${userName}"? Esta acción no se puede deshacer.`)) return;
-    this.deletingUserId = userId;
-    this.api.deleteUser(userId).subscribe({
-      next: () => {
-        this.users = this.users.filter(u => u.id !== userId);
-        this.deletingUserId = null;
-      },
-      error: (err: any) => {
-        alert(err?.error?.error || 'Error deleting user.');
-        this.deletingUserId = null;
-      },
-    });
+    this.openConfirm(
+      'Delete user',
+      `Delete "${userName}"? This action cannot be undone.`,
+      true,
+      () => {
+        this.deletingUserId = userId;
+        this.api.deleteUser(userId).subscribe({
+          next: () => { this.users = this.users.filter(u => u.id !== userId); this.deletingUserId = null; },
+          error: (err: any) => {
+            this.showAlert(err?.error?.error || 'Error deleting user.');
+            this.deletingUserId = null;
+          },
+        });
+      }
+    );
   }
 
   // ── Categories ─────────────────────────────────────────
@@ -176,18 +235,21 @@ export class AdminComponent implements OnInit {
   }
 
   deleteCategory(categoryId: number, categoryName: string): void {
-    if (!confirm(`¿Eliminar la categoría "${categoryName}"?`)) return;
-    this.deletingCategoryId = categoryId;
-    this.api.deleteCategory(categoryId).subscribe({
-      next: () => {
-        this.categories = this.categories.filter(c => c.id !== categoryId);
-        this.deletingCategoryId = null;
-      },
-      error: (err: any) => {
-        alert(err?.error?.error || 'Error deleting category.');
-        this.deletingCategoryId = null;
-      },
-    });
+    this.openConfirm(
+      'Delete category',
+      `Delete category "${categoryName}"?`,
+      true,
+      () => {
+        this.deletingCategoryId = categoryId;
+        this.api.deleteCategory(categoryId).subscribe({
+          next: () => { this.categories = this.categories.filter(c => c.id !== categoryId); this.deletingCategoryId = null; },
+          error: (err: any) => {
+            this.showAlert(err?.error?.error || 'Error deleting category.');
+            this.deletingCategoryId = null;
+          },
+        });
+      }
+    );
   }
 
   goToItems(): void {

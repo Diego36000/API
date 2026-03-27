@@ -71,6 +71,10 @@ export class ApiService {
     return this.http.put(`/api/users/${userId}`, data, { headers: this.authHeaders() });
   }
 
+  setUserAdmin(userId: number, isAdmin: boolean): Observable<any> {
+    return this.http.patch(`/api/users/${userId}/admin`, { is_admin: isAdmin }, { headers: this.authHeaders() });
+  }
+
   deleteUser(userId: number): Observable<any> {
     return this.http.delete(`/api/users/${userId}`, { headers: this.authHeaders() });
   }
@@ -82,8 +86,23 @@ export class ApiService {
   }
 
   // ── Items ─────────────────────────────────────────────
-  getItems(): Observable<any> {
-    return this.http.get('/api/items');
+  getItems(filters?: {
+    search?: string; category_id?: number | null; status?: string | null;
+    condition?: string | null; country?: string | null; page?: number; limit?: number;
+  }): Observable<any> {
+    const params: Record<string, string> = {};
+    if (filters?.search)       params['search']      = filters.search;
+    if (filters?.category_id)  params['category_id'] = String(filters.category_id);
+    if (filters?.status)       params['status']       = filters.status;
+    if (filters?.condition)    params['condition']    = filters.condition;
+    if (filters?.country)      params['country']      = filters.country;
+    if (filters?.page)         params['page']         = String(filters.page);
+    if (filters?.limit)        params['limit']        = String(filters.limit);
+    return this.http.get('/api/items', { params });
+  }
+
+  getItemSellerCountries(): Observable<any> {
+    return this.http.get('/api/items/seller-countries');
   }
 
   getItem(itemId: number): Observable<any> {
@@ -136,6 +155,27 @@ export class ApiService {
 
   deleteCategory(categoryId: number): Observable<any> {
     return this.http.delete(`/api/categories/${categoryId}`, { headers: this.authHeaders() });
+  }
+
+  getItemsBySeller(sellerId: number): Observable<any> {
+    return this.http.get(`/api/items/seller/${sellerId}`, { headers: this.authHeaders() });
+  }
+
+  // ── Conversations ──────────────────────────────────────
+  getConversations(): Observable<any> {
+    return this.http.get('/api/conversations', { headers: this.authHeaders() });
+  }
+
+  startConversation(itemId: number): Observable<any> {
+    return this.http.post('/api/conversations', { item_id: itemId }, { headers: this.authHeaders() });
+  }
+
+  getMessages(conversationId: number): Observable<any> {
+    return this.http.get(`/api/conversations/${conversationId}/messages`, { headers: this.authHeaders() });
+  }
+
+  sendMessage(conversationId: number, content: string): Observable<any> {
+    return this.http.post(`/api/conversations/${conversationId}/messages`, { content }, { headers: this.authHeaders() });
   }
 
   // ── Locations ─────────────────────────────────────────

@@ -3,6 +3,7 @@ import db from '../Config/dbConfig.js';
 const BASE_QUERY = `
     SELECT i.*, c.name as category,
         u.name as seller_name, u.photo as seller_photo, u.username as seller_username,
+        co.name as seller_country,
         COALESCE(
             json_agg(json_build_object('id', p.id, 'url', p.url, 'order', p."order") ORDER BY p."order")
             FILTER (WHERE p.id IS NOT NULL), '[]'
@@ -10,19 +11,87 @@ const BASE_QUERY = `
     FROM items i
     LEFT JOIN categories c ON i.category_id = c.id
     LEFT JOIN users u ON u.id = i.seller_id
+    LEFT JOIN countries co ON co.id = u.country_id
     LEFT JOIN item_photos p ON p.item_id = i.id
 `;
 
 class Item {
 
     async getAllItems() {
-        const { rows } = await db.query(`${BASE_QUERY} GROUP BY i.id, c.name, u.name, u.photo, u.username`);
+        const { rows } = await db.query(`${BASE_QUERY} GROUP BY i.id, c.name, u.name, u.photo, u.username, co.name ORDER BY i.created_at DESC`);
         return rows;
+    }
+
+    async getItemsFiltered({ search, category_id, status, condition, country }, page, limit) {
+        const conditions = [];
+        const params = [];
+        let idx = 1;
+
+        if (search) {
+            conditions.push(`(i.name ILIKE $${idx} OR i.description ILIKE $${idx})`);
+            params.push(`%${search}%`);
+            idx++;
+        }
+        if (category_id != null) {
+            conditions.push(`i.category_id = $${idx}`);
+            params.push(category_id);
+            idx++;
+        }
+        if (status) {
+            conditions.push(`i.status = $${idx}`);
+            params.push(status);
+            idx++;
+        }
+        if (condition) {
+            conditions.push(`i.condition = $${idx}`);
+            params.push(condition);
+            idx++;
+        }
+        if (country) {
+            conditions.push(`co.name = $${idx}`);
+            params.push(country);
+            idx++;
+        }
+
+        const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+
+        const { rows: countRows } = await db.query(
+            `SELECT COUNT(DISTINCT i.id) AS total FROM items i
+             LEFT JOIN categories c ON i.category_id = c.id
+             LEFT JOIN users u ON u.id = i.seller_id
+             LEFT JOIN countries co ON co.id = u.country_id
+             LEFT JOIN item_photos p ON p.item_id = i.id
+             ${where}`,
+            params
+        );
+        const total = Number(countRows[0].total);
+
+        const offset = (page - 1) * limit;
+        const { rows } = await db.query(
+            `${BASE_QUERY} ${where}
+             GROUP BY i.id, c.name, u.name, u.photo, u.username, co.name
+             ORDER BY i.created_at DESC
+             LIMIT $${idx} OFFSET $${idx + 1}`,
+            [...params, limit, offset]
+        );
+
+        return { items: rows, total };
+    }
+
+    async getSellerCountries() {
+        const { rows } = await db.query(
+            `SELECT DISTINCT co.name FROM items i
+             JOIN users u ON u.id = i.seller_id
+             JOIN countries co ON co.id = u.country_id
+             WHERE co.name IS NOT NULL
+             ORDER BY co.name`
+        );
+        return rows.map(r => r.name);
     }
 
     async getItemById(id) {
         const { rows } = await db.query(
-            `${BASE_QUERY} WHERE i.id = $1 GROUP BY i.id, c.name, u.name, u.photo, u.username`,
+            `${BASE_QUERY} WHERE i.id = $1 GROUP BY i.id, c.name, u.name, u.photo, u.username, co.name`,
             [id]
         );
         return rows;
@@ -30,7 +99,7 @@ class Item {
 
     async getItemsBySeller(sellerId) {
         const { rows } = await db.query(
-            `${BASE_QUERY} WHERE i.seller_id = $1 GROUP BY i.id, c.name, u.name, u.photo, u.username`,
+            `${BASE_QUERY} WHERE i.seller_id = $1 GROUP BY i.id, c.name, u.name, u.photo, u.username, co.name`,
             [sellerId]
         );
         return rows;

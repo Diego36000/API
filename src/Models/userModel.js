@@ -56,6 +56,10 @@ class User {
         return db.query('UPDATE users SET photo = $1 WHERE id = $2', [photo, id]);
     }
 
+    setAdmin(id, isAdmin) {
+        return db.query('UPDATE users SET is_admin = $1 WHERE id = $2', [isAdmin, id]);
+    }
+
     deleteUser(id) {
         return db.query('DELETE FROM users WHERE id = $1', [id]);
     }

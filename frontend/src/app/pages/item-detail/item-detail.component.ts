@@ -23,9 +23,15 @@ export class ItemDetailComponent implements OnInit {
   currentPhotoIndex = 0;
   isFavorite = false;
   togglingFavorite = false;
+  lightboxOpen = false;
+  lightboxIndex = 0;
+  contactingSeller = false;
+  confirmDialog: { show: boolean; title: string; message: string; action: (() => void) | null } =
+    { show: false, title: '', message: '', action: null };
 
   get currentUserId(): number | null { return this.api.getUserId(); }
   get isOwner(): boolean { return this.item?.seller_id === this.currentUserId; }
+  get isLoggedIn(): boolean { return !!this.api.getToken(); }
 
   readonly CONDITION_LABELS: Record<string, string> = {
     new: 'New',
@@ -102,13 +108,68 @@ export class ItemDetailComponent implements OnInit {
     });
   }
 
+  openConfirm(title: string, message: string, action: () => void): void {
+    this.confirmDialog = { show: true, title, message, action };
+  }
+
+  doConfirm(): void {
+    const action = this.confirmDialog.action;
+    this.confirmDialog = { show: false, title: '', message: '', action: null };
+    action?.();
+  }
+
+  closeConfirm(): void {
+    this.confirmDialog = { show: false, title: '', message: '', action: null };
+  }
+
   deleteItem(): void {
-    if (!confirm('Are you sure you want to delete this listing?')) return;
-    this.deleting = true;
-    this.api.deleteItem(this.item.id).subscribe({
-      next: () => { this.router.navigate(['/items']); },
-      error: () => { this.deleting = false; },
+    this.openConfirm(
+      'Delete listing',
+      'Are you sure you want to delete this listing? This action cannot be undone.',
+      () => {
+        this.deleting = true;
+        this.api.deleteItem(this.item.id).subscribe({
+          next: () => { this.router.navigate(['/items']); },
+          error: () => { this.deleting = false; },
+        });
+      }
+    );
+  }
+
+  openLightbox(index: number): void {
+    this.lightboxIndex = index;
+    this.lightboxOpen = true;
+  }
+
+  closeLightbox(): void {
+    this.lightboxOpen = false;
+  }
+
+  lightboxPrev(): void {
+    if (this.lightboxIndex > 0) this.lightboxIndex--;
+  }
+
+  lightboxNext(): void {
+    if (this.lightboxIndex < this.item.photos.length - 1) this.lightboxIndex++;
+  }
+
+  contactSeller(): void {
+    if (!this.currentUserId) { this.router.navigate(['/login']); return; }
+    this.contactingSeller = true;
+    this.api.startConversation(this.item.id).subscribe({
+      next: (res: any) => {
+        const convId = res.data?.id;
+        this.router.navigate(['/messages'], convId ? { queryParams: { conv: convId } } : {});
+      },
+      error: () => {
+        this.contactingSeller = false;
+        this.router.navigate(['/messages']);
+      },
     });
+  }
+
+  viewSellerProfile(): void {
+    this.router.navigate(['/users', this.item.seller_id]);
   }
 
   goBack(): void {

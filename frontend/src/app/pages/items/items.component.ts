@@ -1,7 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { CurrencyPipe, TitleCasePipe } from '@angular/common';
+import { CurrencyPipe } from '@angular/common';
 import { ApiService } from '../../services/api.service';
 
 const GRADIENTS = [
@@ -15,10 +15,12 @@ const GRADIENTS = [
 
 const TO_GRAMS: Record<string, number> = { g: 1, kg: 1000, lb: 453.592, oz: 28.3495 };
 
+const PAGE_SIZE = 25;
+
 @Component({
   selector: 'app-items',
   standalone: true,
-  imports: [FormsModule, CurrencyPipe, TitleCasePipe],
+  imports: [FormsModule, CurrencyPipe],
   templateUrl: './items.component.html',
   styleUrl: './items.component.scss',
 })
@@ -28,20 +30,33 @@ export class ItemsComponent implements OnInit {
 
   items: any[] = [];
   categories: any[] = [];
+  availableCountries: string[] = [];
+  total = 0;
   loadError = '';
   createError = '';
   createSuccess = '';
   loadingItems = false;
   submitting = false;
   showModal = false;
-  searchQuery = '';
-  selectedFiles: File[] = [];
 
+  // Filters
+  searchQuery = '';
+  selectedCategoryId: number | null = null;
+  selectedStatus: string | null = null;
+  selectedCondition: string | null = null;
+  selectedCountry: string | null = null;
+
+  // Pagination
+  currentPage = 1;
+
+  // User
   userName = '';
   userInitial = '';
   userPhoto = '';
-  isAdmin = false;
+  get isAdmin(): boolean { return this.api.isAdmin(); }
 
+  // Create form
+  selectedFiles: File[] = [];
   newItem = {
     name: '',
     description: '',
@@ -53,13 +68,85 @@ export class ItemsComponent implements OnInit {
     category_id: null as number | null,
   };
 
-  get filteredItems(): any[] {
-    const q = this.searchQuery.trim().toLowerCase();
-    if (!q) return this.items;
-    return this.items.filter(i =>
-      i.name?.toLowerCase().includes(q) ||
-      i.description?.toLowerCase().includes(q)
-    );
+  readonly CONDITIONS = [
+    { value: 'new',        label: 'New' },
+    { value: 'like_new',   label: 'Like new' },
+    { value: 'good',       label: 'Good' },
+    { value: 'acceptable', label: 'Acceptable' },
+    { value: 'for_parts',  label: 'For parts' },
+  ];
+
+  readonly STATUSES = [
+    { value: 'available', label: 'Available' },
+    { value: 'reserved',  label: 'Reserved' },
+    { value: 'sold',      label: 'Sold' },
+  ];
+
+  readonly STATUS_LABELS: Record<string, string> = {
+    available: 'Available', reserved: 'Reserved', sold: 'Sold',
+  };
+
+  readonly CONDITION_LABELS: Record<string, string> = {
+    new: 'New', like_new: 'Like new', good: 'Good', acceptable: 'Acceptable', for_parts: 'For parts',
+  };
+
+  get activeFilterCount(): number {
+    return [this.selectedCategoryId, this.selectedStatus, this.selectedCondition, this.selectedCountry]
+      .filter(v => v != null).length + (this.searchQuery.trim() ? 1 : 0);
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.total / PAGE_SIZE) || 1;
+  }
+
+  get pageNumbers(): number[] {
+    const total = this.totalPages;
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+    const pages: number[] = [1];
+    if (this.currentPage > 3) pages.push(-1);
+    for (let i = Math.max(2, this.currentPage - 1); i <= Math.min(total - 1, this.currentPage + 1); i++) pages.push(i);
+    if (this.currentPage < total - 2) pages.push(-1);
+    pages.push(total);
+    return pages;
+  }
+
+  clearFilters(): void {
+    this.searchQuery = '';
+    this.selectedCategoryId = null;
+    this.selectedStatus = null;
+    this.selectedCondition = null;
+    this.selectedCountry = null;
+    this.currentPage = 1;
+    this.loadItems();
+  }
+
+  selectCategory(id: number | null): void {
+    this.selectedCategoryId = this.selectedCategoryId === id ? null : id;
+    this.currentPage = 1;
+    this.loadItems();
+  }
+
+  selectStatus(v: string): void {
+    this.selectedStatus = this.selectedStatus === v ? null : v;
+    this.currentPage = 1;
+    this.loadItems();
+  }
+
+  selectCondition(v: string): void {
+    this.selectedCondition = this.selectedCondition === v ? null : v;
+    this.currentPage = 1;
+    this.loadItems();
+  }
+
+  onCountryChange(): void { this.currentPage = 1; this.loadItems(); }
+
+  onSearch(): void { this.currentPage = 1; this.loadItems(); }
+
+  goToPage(p: number): void {
+    if (p < 1 || p > this.totalPages) return;
+    this.currentPage = p;
+    this.loadItems();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   ngOnInit(): void {
@@ -69,13 +156,21 @@ export class ItemsComponent implements OnInit {
     }
     this.userName = this.api.getUserName();
     this.userInitial = this.userName ? this.userName[0].toUpperCase() : '?';
-    this.isAdmin = this.api.isAdmin();
     this.loadItems();
     this.loadCategories();
+    this.api.getItemSellerCountries().subscribe({
+      next: (res: any) => { this.availableCountries = res.data ?? []; },
+      error: () => {},
+    });
     const userId = this.api.getUserId();
     if (userId) {
       this.api.getUser(userId).subscribe({
-        next: (res: any) => { this.userPhoto = res.data?.photo ?? ''; },
+        next: (res: any) => {
+          this.userPhoto = res.data?.photo ?? '';
+          if (res.data?.is_admin != null) {
+            localStorage.setItem('is_admin', res.data.is_admin ? 'true' : 'false');
+          }
+        },
         error: () => {},
       });
     }
@@ -84,9 +179,18 @@ export class ItemsComponent implements OnInit {
   loadItems(): void {
     this.loadingItems = true;
     this.loadError = '';
-    this.api.getItems().subscribe({
+    this.api.getItems({
+      search: this.searchQuery.trim() || undefined,
+      category_id: this.selectedCategoryId,
+      status: this.selectedStatus,
+      condition: this.selectedCondition,
+      country: this.selectedCountry,
+      page: this.currentPage,
+      limit: PAGE_SIZE,
+    }).subscribe({
       next: (res: any) => {
-        this.items = res.data ?? res;
+        this.items = res.data ?? [];
+        this.total = res.total ?? 0;
         this.loadingItems = false;
       },
       error: (err: any) => {
@@ -174,20 +278,9 @@ export class ItemsComponent implements OnInit {
     return GRADIENTS[id % GRADIENTS.length];
   }
 
-  openItem(id: number): void {
-    this.router.navigate(['/items', id]);
-  }
-
-  goToProfile(): void {
-    this.router.navigate(['/profile']);
-  }
-
-  goToAdmin(): void {
-    this.router.navigate(['/admin']);
-  }
-
-  logout(): void {
-    this.api.logout();
-    this.router.navigate(['/login']);
-  }
+  openItem(id: number): void { this.router.navigate(['/items', id]); }
+  goToProfile(): void { this.router.navigate(['/profile']); }
+  goToFavorites(): void { this.router.navigate(['/favorites']); }
+  goToMessages(): void { this.router.navigate(['/messages']); }
+  logout(): void { this.api.logout(); this.router.navigate(['/login']); }
 }

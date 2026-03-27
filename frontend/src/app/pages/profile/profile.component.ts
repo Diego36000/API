@@ -33,7 +33,9 @@ export class ProfileComponent implements OnInit {
     bio: '',
     country_id: null as number | null,
     city: '',
-    password: '',
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
   };
 
   get userInitial(): string {
@@ -69,7 +71,9 @@ export class ProfileComponent implements OnInit {
           bio: this.user.bio ?? '',
           country_id: this.user.country_id ?? null,
           city: this.user.city ?? '',
-          password: '',
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: '',
         };
         this.loading = false;
       },
@@ -82,6 +86,23 @@ export class ProfileComponent implements OnInit {
   onSave(): void {
     this.saveError = '';
     this.saveSuccess = '';
+
+    const changingPassword = !!this.editData.newPassword || !!this.editData.currentPassword;
+    if (changingPassword) {
+      if (!this.editData.currentPassword) {
+        this.saveError = 'Please enter your current password.';
+        return;
+      }
+      if (!this.editData.newPassword) {
+        this.saveError = 'Please enter a new password.';
+        return;
+      }
+      if (this.editData.newPassword !== this.editData.confirmPassword) {
+        this.saveError = 'New passwords do not match.';
+        return;
+      }
+    }
+
     this.saving = true;
     const userId = this.api.getUserId();
     if (!userId) return;
@@ -95,13 +116,15 @@ export class ProfileComponent implements OnInit {
       country_id: this.editData.country_id || undefined,
       city: this.editData.city || undefined,
     };
-    if (this.editData.password) payload['password'] = this.editData.password;
+    if (changingPassword) payload['password'] = this.editData.newPassword;
 
     this.api.updateUser(userId, payload).subscribe({
       next: () => {
         this.saveSuccess = 'Profile updated successfully.';
         this.saving = false;
-        this.editData.password = '';
+        this.editData.currentPassword = '';
+        this.editData.newPassword = '';
+        this.editData.confirmPassword = '';
         const token = this.api.getToken();
         if (token) this.api.saveToken(token, this.editData.name, userId);
         this.user = { ...this.user, ...payload, password: this.user.password };
@@ -134,8 +157,17 @@ export class ProfileComponent implements OnInit {
     });
   }
 
+  get isAdmin(): boolean { return this.api.isAdmin(); }
+
   goBack(): void {
     this.router.navigate(['/items']);
+  }
+
+  goToFavorites(): void { this.router.navigate(['/favorites']); }
+  goToMessages(): void { this.router.navigate(['/messages']); }
+
+  goToAdmin(): void {
+    this.router.navigate(['/admin']);
   }
 
   logout(): void {

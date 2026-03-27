@@ -48,6 +48,7 @@ const router = express.Router();
  *         description: Artículo creado
  */
 router.get('/', itemController.getAllItems);
+router.get('/seller-countries', itemController.getSellerCountries);
 router.post('/', authMiddleware.verifyToken, itemController.createItem);
 
 /**

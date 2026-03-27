@@ -17,11 +17,16 @@ export class RegisterComponent {
   name = '';
   email = '';
   password = '';
+  confirmPassword = '';
   errorMessage = '';
   loading = false;
 
   onSubmit(): void {
     this.errorMessage = '';
+    if (this.password !== this.confirmPassword) {
+      this.errorMessage = 'Passwords do not match.';
+      return;
+    }
     this.loading = true;
     this.api.register(this.name, this.email, this.password).subscribe({
       next: (res: any) => {

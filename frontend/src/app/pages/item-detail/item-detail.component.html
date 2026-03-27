@@ -1,10 +1,18 @@
 <!-- Navbar -->
 <nav class="navbar">
-  <button class="nav-back" (click)="goBack()">← Back</button>
-  <span class="nav-brand">
-    <span class="brand-dot"></span>
+  <button class="nav-back" (click)="goBack()">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    Back
+  </button>
+  <a class="nav-brand">
+    <div class="brand-icon">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
+        <path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>
+      </svg>
+    </div>
     Mercado
-  </span>
+  </a>
   <div class="nav-spacer"></div>
 </nav>
 
@@ -19,7 +27,9 @@
 <!-- Error -->
 @if (!loading && loadError) {
   <div class="state-box">
-    <span class="state-icon">⚠️</span>
+    <div class="state-err-icon">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+    </div>
     <p>{{ loadError }}</p>
   </div>
 }
@@ -34,9 +44,16 @@
         <div class="gallery-main" [class.no-photo]="!item.photos?.length">
           @if (item.photos?.length > 0) {
             <img [src]="item.photos[currentPhotoIndex].url" [alt]="item.name" />
+            <button class="gallery-expand" (click)="openLightbox(currentPhotoIndex)" title="View full size">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>
+            </button>
             @if (item.photos.length > 1) {
-              <button class="gallery-btn gallery-prev" (click)="prevPhoto()" [disabled]="currentPhotoIndex === 0">‹</button>
-              <button class="gallery-btn gallery-next" (click)="nextPhoto()" [disabled]="currentPhotoIndex === item.photos.length - 1">›</button>
+              <button class="gallery-btn gallery-prev" (click)="prevPhoto()" [disabled]="currentPhotoIndex === 0">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+              </button>
+              <button class="gallery-btn gallery-next" (click)="nextPhoto()" [disabled]="currentPhotoIndex === item.photos.length - 1">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+              </button>
               <span class="gallery-counter">{{ currentPhotoIndex + 1 }} / {{ item.photos.length }}</span>
             }
           } @else {
@@ -56,11 +73,13 @@
         }
       </div>
 
-      <!-- ── Info ── -->
+      <!-- ── Info Column ── -->
       <div class="info-col">
+
+        <!-- Price & title -->
         <div class="info-card">
-          <h1 class="item-title">{{ item.name }}</h1>
           <p class="item-price">{{ item.price | currency:'EUR':'symbol':'1.0-2' }}</p>
+          <h1 class="item-title">{{ item.name }}</h1>
 
           <div class="badges-row">
             @if (item.condition) {
@@ -76,51 +95,78 @@
           }
 
           <!-- Details -->
-          <div class="details-grid">
-            @if (item.weight_grams) {
-              <div class="detail-row">
-                <span class="detail-label">Weight</span>
-                <span class="detail-value">{{ formatWeight(item.weight_grams) }}</span>
-              </div>
-            }
-            @if (item.dimensions) {
-              <div class="detail-row">
-                <span class="detail-label">Dimensions</span>
-                <span class="detail-value">{{ item.dimensions }}</span>
-              </div>
-            }
-            @if (item.created_at) {
-              <div class="detail-row">
-                <span class="detail-label">Published</span>
-                <span class="detail-value">{{ item.created_at | date:'dd/MM/yyyy' }}</span>
-              </div>
-            }
-          </div>
+          @if (item.weight_grams || item.dimensions || item.created_at) {
+            <div class="details-grid">
+              @if (item.weight_grams) {
+                <div class="detail-row">
+                  <span class="detail-label">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" x2="21" y1="6" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                    Weight
+                  </span>
+                  <span class="detail-value">{{ formatWeight(item.weight_grams) }}</span>
+                </div>
+              }
+              @if (item.dimensions) {
+                <div class="detail-row">
+                  <span class="detail-label">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/></svg>
+                    Dimensions
+                  </span>
+                  <span class="detail-value">{{ item.dimensions }}</span>
+                </div>
+              }
+              @if (item.created_at) {
+                <div class="detail-row">
+                  <span class="detail-label">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                    Published
+                  </span>
+                  <span class="detail-value">{{ item.created_at | date:'dd/MM/yyyy' }}</span>
+                </div>
+              }
+            </div>
+          }
 
-          <!-- Favorite button -->
+          <!-- Favorite button (non-owner) -->
           @if (!isOwner) {
             <button class="btn-favorite" [class.is-favorite]="isFavorite"
               [disabled]="togglingFavorite" (click)="toggleFavorite()">
-              {{ isFavorite ? '♥ Saved' : '♡ Save' }}
+              @if (isFavorite) {
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                Saved
+              } @else {
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                Save to favorites
+              }
             </button>
           }
 
           <!-- Owner actions -->
           @if (isOwner) {
             <div class="owner-actions">
-              <p class="owner-label">Manage status</p>
+              <p class="owner-label">Manage listing</p>
               <div class="status-btns">
                 <button class="btn-status" [class.active]="item.status === 'available'"
                   [disabled]="item.status === 'available' || updatingStatus"
-                  (click)="setStatus('available')">Available</button>
+                  (click)="setStatus('available')">
+                  <span class="status-dot dot-available"></span>
+                  Available
+                </button>
                 <button class="btn-status btn-reserved" [class.active]="item.status === 'reserved'"
                   [disabled]="item.status === 'reserved' || updatingStatus"
-                  (click)="setStatus('reserved')">Reserved</button>
+                  (click)="setStatus('reserved')">
+                  <span class="status-dot dot-reserved"></span>
+                  Reserved
+                </button>
                 <button class="btn-status btn-sold" [class.active]="item.status === 'sold'"
                   [disabled]="item.status === 'sold' || updatingStatus"
-                  (click)="setStatus('sold')">Sold</button>
+                  (click)="setStatus('sold')">
+                  <span class="status-dot dot-sold"></span>
+                  Sold
+                </button>
               </div>
               <button class="btn-delete" [disabled]="deleting" (click)="deleteItem()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="m19 6-.867 12.142A2 2 0 0 1 16.138 20H7.862a2 2 0 0 1-1.995-1.858L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
                 {{ deleting ? 'Deleting...' : 'Delete listing' }}
               </button>
             </div>
@@ -130,8 +176,8 @@
         <!-- Seller card -->
         @if (item.seller_name) {
           <div class="seller-card">
-            <p class="seller-label">Seller</p>
-            <div class="seller-row">
+            <p class="seller-label">Listed by</p>
+            <button type="button" class="seller-row" (click)="viewSellerProfile()">
               <div class="seller-avatar">
                 @if (item.seller_photo) {
                   <img [src]="item.seller_photo" [alt]="item.seller_name" />
@@ -139,17 +185,64 @@
                   {{ item.seller_name[0].toUpperCase() }}
                 }
               </div>
-              <div>
+              <div class="seller-info">
                 <p class="seller-name">{{ item.seller_name }}</p>
                 @if (item.seller_username) {
                   <p class="seller-username">&#64;{{ item.seller_username }}</p>
                 }
               </div>
-            </div>
+              <svg class="seller-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+            @if (!isOwner && isLoggedIn) {
+              <button class="btn-contact-seller" [disabled]="contactingSeller" (click)="contactSeller()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                {{ contactingSeller ? 'Opening chat...' : 'Contact seller' }}
+              </button>
+            }
           </div>
         }
-      </div>
 
+      </div>
     </div>
   </main>
+}
+
+<!-- ── Lightbox ── -->
+@if (lightboxOpen) {
+  <dialog class="lightbox-overlay" open (click)="closeLightbox()" (keydown.escape)="closeLightbox()">
+    <button class="lightbox-close" (click)="closeLightbox()" title="Close">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+
+    <div class="lightbox-content" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
+      <img [src]="item.photos[lightboxIndex].url" [alt]="item.name" class="lightbox-img" />
+    </div>
+
+    @if (item.photos.length > 1) {
+      <button class="lightbox-nav lightbox-prev" (click)="lightboxPrev(); $event.stopPropagation()" [disabled]="lightboxIndex === 0">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <button class="lightbox-nav lightbox-next" (click)="lightboxNext(); $event.stopPropagation()" [disabled]="lightboxIndex === item.photos.length - 1">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
+      <div class="lightbox-counter">{{ lightboxIndex + 1 }} / {{ item.photos.length }}</div>
+    }
+  </dialog>
+}
+
+<!-- ── CONFIRM DIALOG ── -->
+@if (confirmDialog.show) {
+  <div class="dialog-backdrop" (click)="closeConfirm()" (keydown.escape)="closeConfirm()">
+    <div class="dialog-box" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
+      <div class="dialog-icon danger">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="m19 6-.867 12.142A2 2 0 0 1 16.138 20H7.862a2 2 0 0 1-1.995-1.858L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+      </div>
+      <h3 class="dialog-title">{{ confirmDialog.title }}</h3>
+      <p class="dialog-message">{{ confirmDialog.message }}</p>
+      <div class="dialog-actions">
+        <button class="dialog-btn-cancel" (click)="closeConfirm()">Cancel</button>
+        <button class="dialog-btn-confirm danger" (click)="doConfirm()">Delete</button>
+      </div>
+    </div>
+  </div>
 }

@@ -142,6 +142,7 @@ router.get('/', authMiddleware.verifyToken, authMiddleware.verifyAdmin, userCont
  */
 router.get('/:userId', authMiddleware.verifyToken, userController.getUserById);
 router.put('/:userId', authMiddleware.verifyToken, userController.updateUser);
+router.patch('/:userId/admin', authMiddleware.verifyToken, authMiddleware.verifyAdmin, userController.setAdmin);
 router.delete('/:userId', authMiddleware.verifyToken, userController.deleteUser);
 
 /**

@@ -1,22 +1,26 @@
-<!-- Navbar -->
-<nav class="navbar">
-  <a class="nav-brand">
-    <span class="brand-dot"></span>
-    Mercado
-  </a>
-
-  <div class="nav-search">
-    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-    </svg>
-    <input type="text" [(ngModel)]="searchQuery" name="search" placeholder="Search items..." />
+<!-- ══════════════ NAVBAR ══════════════ -->
+<nav class="navbar" aria-label="Main navigation">
+  <div class="nav-brand">
+    <div class="brand-icon">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
+        <path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>
+      </svg>
+    </div>
+    <div class="nav-brand-text">
+      <span class="nav-brand-title">Marketplace</span>
+      <span class="nav-brand-sub">Discover items from sellers near you</span>
+    </div>
   </div>
 
   <div class="nav-actions">
-    @if (isAdmin) {
-      <button class="btn-admin" (click)="goToAdmin()">Admin</button>
-    }
-    <button class="btn-sell" (click)="openModal()">
+    <button class="btn-messages" (click)="goToFavorites()" title="Saved items">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+    </button>
+    <button class="btn-messages" (click)="goToMessages()" title="Messages">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    </button>
+<button class="btn-sell" (click)="openModal()">
       <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
       Publish
     </button>
@@ -30,77 +34,200 @@
   </div>
 </nav>
 
-<!-- Main -->
+<!-- ══════════════ MAIN ══════════════ -->
 <main class="main">
 
   @if (loadError) {
-    <div class="error-banner">{{ loadError }}</div>
-  }
-
-  <div class="page-header">
-    <div class="page-header-left">
-      <h1 class="page-title">Marketplace</h1>
-      <span class="page-count">{{ filteredItems.length }} items</span>
-    </div>
-  </div>
-
-  @if (loadingItems) {
-    <div class="state-box">
-      <div class="spinner"></div>
-      <p>Loading items...</p>
+    <div class="error-banner">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+      {{ loadError }}
     </div>
   }
 
-  @if (!loadingItems && filteredItems.length === 0 && !loadError) {
-    <div class="state-box">
-      <span class="state-icon">📦</span>
-      <p>No items found.</p>
-    </div>
-  }
+  <!-- Layout: sidebar + content -->
+  <div class="layout">
 
-  @if (!loadingItems && filteredItems.length > 0) {
-    <div class="items-grid">
-      @for (item of filteredItems; track item.id) {
-        <button class="item-card" (click)="openItem(item.id)">
-          <div class="card-img" [style.background]="getCardGradient(item.id)">
-            @if (item.photos?.length > 0) {
-              <img [src]="item.photos[0].url" [alt]="item.name" loading="lazy" />
-            } @else {
-              <span class="placeholder-letter">{{ item.name[0] }}</span>
+    <!-- ── Filters sidebar ── -->
+    <aside class="filters-sidebar" aria-label="Filters">
+
+      <!-- Search -->
+      <div class="sidebar-search">
+        <svg class="sidebar-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input type="text" [(ngModel)]="searchQuery" name="search" placeholder="Search items…" (ngModelChange)="onSearch()" />
+      </div>
+
+      <div class="sidebar-header">
+        <span class="sidebar-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+          Filters
+          <span class="sidebar-count">{{ total }} items found</span>
+        </span>
+        @if (activeFilterCount > 0) {
+          <button class="sidebar-clear" (click)="clearFilters()">
+            Clear {{ activeFilterCount }}
+          </button>
+        }
+      </div>
+
+      <!-- Categories -->
+      @if (categories.length > 0) {
+        <div class="sidebar-section">
+          <p class="sidebar-section-title">Category</p>
+          <ul class="sidebar-list">
+            <li>
+              <button class="sidebar-item" [class.active]="selectedCategoryId === null"
+                (click)="selectCategory(null)">
+                <span class="sidebar-item-name">All categories</span>
+              </button>
+            </li>
+            @for (cat of categories; track cat.id) {
+              <li>
+                <button class="sidebar-item" [class.active]="selectedCategoryId === cat.id"
+                  (click)="selectCategory(cat.id)">
+                  <span class="sidebar-item-name">{{ cat.name }}</span>
+                </button>
+              </li>
             }
-            <span [class]="'status-badge status-' + item.status">{{ item.status }}</span>
-          </div>
-          <div class="card-body">
-            <p class="card-price">{{ item.price | currency:'EUR':'symbol':'1.0-2' }}</p>
-            <h3 class="card-title">{{ item.name }}</h3>
-            <div class="card-meta">
-              @if (item.condition) {
-                <span class="tag tag-condition">{{ item.condition | titlecase }}</span>
-              }
-              @if (item.category) {
-                <span class="tag">{{ item.category }}</span>
-              }
-            </div>
-          </div>
-        </button>
+          </ul>
+        </div>
       }
-    </div>
-  }
+
+      <!-- Status -->
+      <div class="sidebar-section">
+        <p class="sidebar-section-title">Status</p>
+        <ul class="sidebar-list">
+          @for (s of STATUSES; track s.value) {
+            <li>
+              <button class="sidebar-item" [class.active]="selectedStatus === s.value"
+                (click)="selectStatus(s.value)">
+                <span class="status-dot" [class]="'dot-' + s.value"></span>
+                <span class="sidebar-item-name">{{ s.label }}</span>
+              </button>
+            </li>
+          }
+        </ul>
+      </div>
+
+      <!-- Condition -->
+      <div class="sidebar-section">
+        <p class="sidebar-section-title">Condition</p>
+        <ul class="sidebar-list">
+          @for (c of CONDITIONS; track c.value) {
+            <li>
+              <button class="sidebar-item" [class.active]="selectedCondition === c.value"
+                (click)="selectCondition(c.value)">
+                <span class="sidebar-item-name">{{ c.label }}</span>
+              </button>
+            </li>
+          }
+        </ul>
+      </div>
+
+      <!-- Country -->
+      @if (availableCountries.length > 0) {
+        <div class="sidebar-section">
+          <p class="sidebar-section-title">Country</p>
+          <select class="sidebar-select" [(ngModel)]="selectedCountry" name="filterCountry"
+            (ngModelChange)="onCountryChange()">
+            <option [ngValue]="null">All countries</option>
+            @for (country of availableCountries; track country) {
+              <option [ngValue]="country">{{ country }}</option>
+            }
+          </select>
+        </div>
+      }
+
+    </aside>
+
+    <!-- ── Content area ── -->
+    <div class="content-area">
+
+      <!-- Loading -->
+      @if (loadingItems) {
+        <div class="state-box">
+          <div class="spinner"></div>
+          <p>Loading items...</p>
+        </div>
+      }
+
+      <!-- Empty -->
+      @if (!loadingItems && total === 0 && !loadError) {
+        <div class="state-box">
+          <div class="empty-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+          </div>
+          <p>No items found.</p>
+        </div>
+      }
+
+      <!-- Grid -->
+      @if (!loadingItems && total > 0) {
+        <div class="items-grid">
+          @for (item of items; track item.id) {
+            <button class="item-card" (click)="openItem(item.id)">
+              <div class="card-img" [style.background]="getCardGradient(item.id)">
+                @if (item.photos?.length > 0) {
+                  <img [src]="item.photos[0].url" [alt]="item.name" loading="lazy" />
+                } @else {
+                  <span class="placeholder-letter">{{ item.name[0] }}</span>
+                }
+                <span [class]="'status-badge status-' + item.status">{{ STATUS_LABELS[item.status] }}</span>
+              </div>
+              <div class="card-body">
+                <p class="card-price">{{ item.price | currency:'EUR':'symbol':'1.0-2' }}</p>
+                <h3 class="card-title">{{ item.name }}</h3>
+                <div class="card-meta">
+                  @if (item.condition) {
+                    <span class="tag tag-condition">{{ CONDITION_LABELS[item.condition] }}</span>
+                  }
+                  @if (item.category) {
+                    <span class="tag">{{ item.category }}</span>
+                  }
+                </div>
+              </div>
+            </button>
+          }
+        </div>
+
+        <!-- Pagination -->
+        @if (totalPages > 1) {
+          <nav class="pagination" aria-label="Pagination">
+            <button class="page-btn page-prev" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1" aria-label="Previous page">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            @for (p of pageNumbers; track $index) {
+              @if (p === -1) {
+                <span class="page-ellipsis">…</span>
+              } @else {
+                <button class="page-btn" [class.active]="p === currentPage" (click)="goToPage(p)">{{ p }}</button>
+              }
+            }
+            <button class="page-btn page-next" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages" aria-label="Next page">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+          </nav>
+        }
+      }
+
+    </div><!-- /content-area -->
+  </div><!-- /layout -->
 
 </main>
 
-<!-- Create Modal -->
+<!-- ══════════════ CREATE MODAL ══════════════ -->
 @if (showModal) {
   <div class="modal-overlay" (click)="closeModal()" (keydown.escape)="closeModal()">
     <dialog class="modal" open (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
 
       <div class="modal-header">
-        <div class="modal-title-group">
+        <div>
           <h3>New listing</h3>
           <p class="modal-subtitle">Fill in the details of your item</p>
         </div>
         <button class="close-btn" type="button" (click)="closeModal()">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
         </button>
       </div>
 
@@ -167,7 +294,7 @@
             <div class="field">
               <label for="m-dim">Dimensions</label>
               <input id="m-dim" type="text" [(ngModel)]="newItem.dimensions" name="dimensions"
-                placeholder="LxWxH e.g. 30x20x10 cm" />
+                placeholder="30x20x10 cm" />
             </div>
           </div>
 
@@ -177,13 +304,17 @@
               <input id="m-photos" type="file" multiple accept="image/*" (change)="onFilesSelected($event)" />
               @if (selectedFiles.length === 0) {
                 <div class="file-drop-content">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
-                  <span class="file-drop-hint">Add photos</span>
+                  <div class="file-drop-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                  </div>
+                  <span class="file-drop-hint">Click to add photos</span>
                   <span class="file-drop-sub">JPG, PNG, WebP · max 10 MB</span>
                 </div>
               } @else {
                 <div class="file-drop-content">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                  <div class="file-drop-icon" style="background: var(--primary-light); border-color: rgba(139,92,246,0.3); color: var(--primary)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                  </div>
                   <span class="file-drop-hint" style="color:var(--primary)">{{ selectedFiles.length }} photo{{ selectedFiles.length > 1 ? 's' : '' }} selected</span>
                 </div>
               }
@@ -202,7 +333,12 @@
         <div class="modal-footer">
           <button type="button" class="btn-cancel" (click)="closeModal()">Cancel</button>
           <button type="submit" class="btn-submit" [disabled]="submitting">
-            {{ submitting ? 'Publishing...' : 'Publish listing' }}
+            @if (submitting) {
+              <span class="btn-spinner"></span>
+              Publishing...
+            } @else {
+              Publish listing
+            }
           </button>
         </div>
       </form>
