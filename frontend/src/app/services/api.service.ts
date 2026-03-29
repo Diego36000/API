@@ -117,6 +117,14 @@ export class ApiService {
     return this.http.post('/api/items', item, { headers: this.authHeaders() });
   }
 
+  updateItem(itemId: number, data: {
+    name: string; description?: string; price: number;
+    category_id?: number | null; condition?: string;
+    weight_grams?: number | null; dimensions?: string;
+  }): Observable<any> {
+    return this.http.put(`/api/items/${itemId}`, data, { headers: this.authHeaders() });
+  }
+
   updateItemStatus(itemId: number, status: string): Observable<any> {
     return this.http.patch(`/api/items/${itemId}/status`, { status }, { headers: this.authHeaders() });
   }

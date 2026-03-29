@@ -145,6 +145,10 @@
           @if (isOwner) {
             <div class="owner-actions">
               <p class="owner-label">Manage listing</p>
+              <button class="btn-edit-listing" (click)="openEdit()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Edit listing
+              </button>
               <div class="status-btns">
                 <button class="btn-status" [class.active]="item.status === 'available'"
                   [disabled]="item.status === 'available' || updatingStatus"
@@ -228,6 +232,87 @@
       <div class="lightbox-counter">{{ lightboxIndex + 1 }} / {{ item.photos.length }}</div>
     }
   </dialog>
+}
+
+<!-- ── EDIT MODAL ── -->
+@if (editOpen) {
+  <div class="dialog-backdrop">
+    <div class="edit-modal" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
+      <div class="edit-modal-header">
+        <h3>Edit listing</h3>
+        <button type="button" class="modal-close" (click)="closeEdit()">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="edit-modal-body">
+        <div class="edit-form-row">
+          <div class="edit-field">
+            <label for="edit-name">Name *</label>
+            <input id="edit-name" type="text" [(ngModel)]="editForm.name" name="edit-name" placeholder="Item name" maxlength="120" />
+          </div>
+          <div class="edit-field edit-field-sm">
+            <label for="edit-price">Price (€) *</label>
+            <input id="edit-price" type="number" [(ngModel)]="editForm.price" name="edit-price" placeholder="0.00" min="0" step="0.01" />
+          </div>
+        </div>
+
+        <div class="edit-field">
+          <label for="edit-desc">Description</label>
+          <textarea id="edit-desc" [(ngModel)]="editForm.description" name="edit-desc" rows="4" placeholder="Describe your item..." maxlength="2000"></textarea>
+        </div>
+
+        <div class="edit-form-row">
+          <div class="edit-field">
+            <label for="edit-cat">Category</label>
+            <select id="edit-cat" [(ngModel)]="editForm.category_id" name="edit-cat">
+              <option [ngValue]="null">No category</option>
+              @for (cat of categories; track cat.id) {
+                <option [ngValue]="cat.id">{{ cat.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="edit-field">
+            <label for="edit-cond">Condition</label>
+            <select id="edit-cond" [(ngModel)]="editForm.condition" name="edit-cond">
+              <option value="">Not specified</option>
+              <option value="new">New</option>
+              <option value="like_new">Like new</option>
+              <option value="good">Good</option>
+              <option value="acceptable">Acceptable</option>
+              <option value="for_parts">For parts</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="edit-form-row">
+          <div class="edit-field">
+            <label for="edit-weight">Weight (grams)</label>
+            <input id="edit-weight" type="number" [(ngModel)]="editForm.weight_grams" name="edit-weight" placeholder="e.g. 500" min="0" />
+          </div>
+          <div class="edit-field">
+            <label for="edit-dims">Dimensions</label>
+            <input id="edit-dims" type="text" [(ngModel)]="editForm.dimensions" name="edit-dims" placeholder="e.g. 10x20x5 cm" maxlength="50" />
+          </div>
+        </div>
+
+        @if (editError) {
+          <div class="edit-error">{{ editError }}</div>
+        }
+      </div>
+
+      <div class="edit-modal-footer">
+        <button type="button" class="btn-cancel-edit" (click)="closeEdit()">Cancel</button>
+        <button type="button" class="btn-save-edit" (click)="saveEdit()" [disabled]="editSaving">
+          @if (editSaving) {
+            <span class="btn-spinner"></span> Saving...
+          } @else {
+            Save changes
+          }
+        </button>
+      </div>
+    </div>
+  </div>
 }
 
 <!-- ── CONFIRM DIALOG ── -->

@@ -257,7 +257,7 @@
 
   <!-- ── EDIT USER MODAL ── -->
   @if (editingUser) {
-    <div class="modal-backdrop" (click)="closeEdit()" (keydown.escape)="closeEdit()">
+    <div class="modal-backdrop">
       <div class="edit-modal" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
         <div class="modal-header">
           <div>
