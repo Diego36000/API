@@ -1,0 +1,32 @@
+{
+  "applicationId": "com.nekopop.admin",
+  "version": "1.0.0",
+  "defaultMode": "window",
+  "port": 0,
+  "url": "https://localhost:8080/login",
+  "nativeBlockList": [],
+  "modes": {
+    "window": {
+      "title": "NekoPop Admin",
+      "width": 1280,
+      "height": 800,
+      "minWidth": 960,
+      "minHeight": 600,
+      "fullScreen": false,
+      "alwaysOnTop": false,
+      "enableInspector": false,
+      "hidden": false,
+      "maximizable": true,
+      "resizable": true,
+      "exitProcessOnClose": true
+    }
+  },
+  "cli": {
+    "binaryName": "nekopop-admin",
+    "resourcesPath": "/resources/",
+    "extensionsPath": "/extensions/",
+    "clientLibrary": "/resources/neutralino.js",
+    "binaryVersion": "5.5.0",
+    "clientVersion": "3.12.0"
+  }
+}

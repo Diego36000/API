@@ -14,7 +14,7 @@ export class AdminComponent implements OnInit {
   private readonly api = inject(ApiService);
   private readonly router = inject(Router);
 
-  activeTab: 'users' | 'categories' = 'users';
+  activeTab: 'users' | 'categories' | 'items' = 'users';
 
   // Users
   users: any[] = [];
@@ -43,6 +43,27 @@ export class AdminComponent implements OnInit {
   // Countries (for edit form)
   countries: any[] = [];
 
+  // Items
+  items: any[] = [];
+  itemsTotal = 0;
+  loadingItems = false;
+  itemsError = '';
+  itemsSearch = '';
+  itemsStatusFilter = '';
+  itemsPage = 1;
+  readonly ITEMS_PER_PAGE = 50;
+  deletingItemId: number | null = null;
+  updatingItemStatusId: number | null = null;
+
+  // Item edit modal
+  editingItem: any = null;
+  editItemForm = { name: '', description: '', price: 0, category_id: null as number | null, condition: '', weight_grams: null as number | null, dimensions: '' };
+  savingItem = false;
+  saveItemError = '';
+  saveItemSuccess = false;
+  editItemNewPhotos: File[] = [];
+  editItemPreviews: string[] = [];
+
   // Categories
   categories: any[] = [];
   loadingCategories = false;
@@ -62,13 +83,14 @@ export class AdminComponent implements OnInit {
     }
     this.loadUsers();
     this.loadCategories();
+    this.loadItems();
     this.api.getCountries().subscribe({
       next: (res: any) => { this.countries = res.data ?? []; },
       error: () => {},
     });
   }
 
-  setTab(tab: 'users' | 'categories'): void {
+  setTab(tab: 'users' | 'categories' | 'items'): void {
     this.activeTab = tab;
   }
 
@@ -193,6 +215,158 @@ export class AdminComponent implements OnInit {
           error: (err: any) => {
             this.showAlert(err?.error?.error || 'Error deleting user.');
             this.deletingUserId = null;
+          },
+        });
+      }
+    );
+  }
+
+  // ── Items ──────────────────────────────────────────────
+
+  loadItems(): void {
+    this.loadingItems = true;
+    this.itemsError = '';
+    this.api.getItems({
+      search: this.itemsSearch || undefined,
+      status: this.itemsStatusFilter || undefined,
+      page: this.itemsPage,
+      limit: this.ITEMS_PER_PAGE,
+    }).subscribe({
+      next: (res: any) => {
+        this.items = res.data ?? [];
+        this.itemsTotal = res.total ?? this.items.length;
+        this.loadingItems = false;
+      },
+      error: (err: any) => {
+        this.itemsError = err?.error?.error || 'Error loading items.';
+        this.loadingItems = false;
+      },
+    });
+  }
+
+  searchItems(): void {
+    this.itemsPage = 1;
+    this.loadItems();
+  }
+
+  itemsNextPage(): void {
+    this.itemsPage++;
+    this.loadItems();
+  }
+
+  itemsPrevPage(): void {
+    if (this.itemsPage > 1) { this.itemsPage--; this.loadItems(); }
+  }
+
+  get itemsTotalPages(): number {
+    return Math.ceil(this.itemsTotal / this.ITEMS_PER_PAGE);
+  }
+
+  openItemEdit(item: any): void {
+    this.editingItem = item;
+    this.editItemForm = {
+      name: item.name ?? '',
+      description: item.description ?? '',
+      price: item.price ?? 0,
+      category_id: item.category_id ?? null,
+      condition: item.condition ?? '',
+      weight_grams: item.weight_grams ?? null,
+      dimensions: item.dimensions ?? '',
+    };
+    this.saveItemError = '';
+    this.saveItemSuccess = false;
+  }
+
+  closeItemEdit(): void {
+    this.editingItem = null;
+    this.editItemNewPhotos = [];
+    this.editItemPreviews.forEach(u => URL.revokeObjectURL(u));
+    this.editItemPreviews = [];
+  }
+
+  onItemPhotosSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files?.length) return;
+    this.editItemPreviews.forEach(u => URL.revokeObjectURL(u));
+    this.editItemNewPhotos = Array.from(input.files);
+    this.editItemPreviews = this.editItemNewPhotos.map(f => URL.createObjectURL(f));
+  }
+
+  saveItem(): void {
+    if (!this.editingItem) return;
+    this.savingItem = true;
+    this.saveItemError = '';
+    this.saveItemSuccess = false;
+    const payload = {
+      name: this.editItemForm.name,
+      description: this.editItemForm.description || undefined,
+      price: this.editItemForm.price,
+      category_id: this.editItemForm.category_id || undefined,
+      condition: this.editItemForm.condition || undefined,
+      weight_grams: this.editItemForm.weight_grams || undefined,
+      dimensions: this.editItemForm.dimensions || undefined,
+    };
+    this.api.updateItem(this.editingItem.id, payload).subscribe({
+      next: () => {
+        Object.assign(this.editingItem, payload);
+        const cat = this.categories.find(c => c.id === payload.category_id);
+        if (cat) this.editingItem.category = cat.name;
+
+        if (this.editItemNewPhotos.length > 0) {
+          this.api.uploadItemPhotos(this.editingItem.id, this.editItemNewPhotos).subscribe({
+            next: (res: any) => {
+              // update first photo preview in table row
+              if (this.editItemPreviews.length > 0) {
+                if (!this.editingItem.photos) this.editingItem.photos = [];
+                this.editingItem.photos = res.urls
+                  ? res.urls.map((url: string, i: number) => ({ id: i, url, order: i }))
+                  : [{ id: 0, url: this.editItemPreviews[0], order: 0 }];
+              }
+              this.savingItem = false;
+              this.saveItemSuccess = true;
+              setTimeout(() => { this.closeItemEdit(); }, 800);
+            },
+            error: (err: any) => {
+              this.saveItemError = err?.error?.error || 'Item saved but error uploading photos.';
+              this.savingItem = false;
+            },
+          });
+        } else {
+          this.savingItem = false;
+          this.saveItemSuccess = true;
+          setTimeout(() => { this.closeItemEdit(); }, 800);
+        }
+      },
+      error: (err: any) => {
+        this.saveItemError = err?.error?.error || 'Error saving item.';
+        this.savingItem = false;
+      },
+    });
+  }
+
+  changeItemStatus(item: any, status: string): void {
+    this.updatingItemStatusId = item.id;
+    this.api.updateItemStatus(item.id, status).subscribe({
+      next: () => { item.status = status; this.updatingItemStatusId = null; },
+      error: (err: any) => {
+        this.showAlert(err?.error?.error || 'Error updating status.');
+        this.updatingItemStatusId = null;
+      },
+    });
+  }
+
+  deleteItem(itemId: number, itemName: string): void {
+    this.openConfirm(
+      'Delete item',
+      `Delete "${itemName}"? This action cannot be undone.`,
+      true,
+      () => {
+        this.deletingItemId = itemId;
+        this.api.deleteItem(itemId).subscribe({
+          next: () => { this.items = this.items.filter(i => i.id !== itemId); this.itemsTotal--; this.deletingItemId = null; },
+          error: (err: any) => {
+            this.showAlert(err?.error?.error || 'Error deleting item.');
+            this.deletingItemId = null;
           },
         });
       }

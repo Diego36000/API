@@ -1,18 +1,12 @@
-# Hewoooo
-
-https://localhost:
-meow :3
+# DIEGOAPP
+Es importante poner el https:// para que el navegador no intente cargar la página a través de HTTP, lo que causaría un error de conexión debido al certificado autofirmado. Así que, para acceder a la aplicación, debes usar:
+https://localhost:8080
 
 ## Setup
 Instalar pnpm o npm
 Windows (pnpm): `iwr https://get.pnpm.io/install.ps1 -useb | iex`
 
-```bash
-cd frontend
-pnpm i
-cd ..
-```
-Y ejecutar el script de start:
+Ejecutar el script de start:
     - Windows: `./start.ps1`
     - Linux: `./start.sh`
 
@@ -37,21 +31,49 @@ Y añadir DATABASE_SSL=true al .env cuando se despliegue en producción. Pero pa
 admin@admin.com
 Admin777!
 
-## Electron
-Cómo usar
+## Seeder
+Para generar datos de prueba, ejecutar el seeder:
+    `node utils/seed-items.js`
+
+## App de escritorio (Neutralino)
+
 Ejecutar en desarrollo (necesita Docker corriendo):
 
+    cd desktop
+    pnpm install
+    pnpm run update   # descarga binarios de Neutralino (solo la primera vez)
+    pnpm start
 
-cd desktop
-npm start
-Generar instalador .exe para Windows:
+Generar binario de distribución:
 
+    cd desktop
+    pnpm run build
+    # → genera desktop/dist/
 
-cd desktop
-npm run build:win
-# → genera desktop/dist/NekoPop Admin Setup.exe
-Cambiar la URL del servidor (si el servidor no es localhost):
+Cambiar la URL del servidor (si el servidor no es localhost), editar `desktop/resources/index.html`:
 
+    const API_URL = 'https://192.168.1.50:8080';
 
-$env:API_URL="https://192.168.1.50:8080"; npm start
 La app abre https://localhost:8080/login en una ventana nativa. El certificado autofirmado se acepta automáticamente. Si el servidor no está disponible, muestra una pantalla de error con instrucciones para arrancar Docker.
+
+## Advertencia de certificado en el navegador
+
+El servidor usa un certificado autofirmado, por lo que Chrome puede mostrar "Su conexión no es privada". Opciones para evitarlo:
+
+**Opción 1 — Instalar el certificado en Windows (PowerShell como admin):**
+
+    Import-Certificate -FilePath "data\cert.crt" -CertStoreLocation Cert:\LocalMachine\Root
+
+Reinicia el navegador después.
+
+**Opción 2 — mkcert (recomendado):**
+
+    choco install mkcert   # o: scoop install mkcert
+    mkcert -install
+    mkcert -key-file data/cert.key -cert-file data/cert.crt localhost 127.0.0.1
+
+Los certificados generados son reconocidos automáticamente por Chrome, Firefox y Edge.
+
+**Opción 3 — Flag de Chrome (solo para pruebas rápidas):**
+
+Activar en `chrome://flags/#allow-insecure-localhost`

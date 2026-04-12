@@ -26,19 +26,21 @@
           "/media/*.(svg|cur|jpg|jpeg|png|apng|webp|avif|gif|otf|ttf|woff|woff2)"
         ]
       }
-    },
-    {
-      "name": "uploads",
-      "installMode": "lazy",
-      "updateMode": "lazy",
-      "resources": {
-        "urls": [
-          "/uploads/**"
-        ]
-      }
     }
   ],
   "dataGroups": [
+    {
+      "name": "uploads",
+      "urls": [
+        "/uploads/**"
+      ],
+      "cacheConfig": {
+        "strategy": "freshness",
+        "maxSize": 200,
+        "maxAge": "7d",
+        "timeout": "5s"
+      }
+    },
     {
       "name": "static-api",
       "urls": [

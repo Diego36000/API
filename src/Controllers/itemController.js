@@ -101,7 +101,7 @@ async function updateItem(req, res) {
         if (results.length === 0) return res.status(404).json({ error: 'Item not found' });
 
         const item = results[0];
-        if (item.seller_id !== userId) return res.status(403).json({ error: 'You can only update your own items' });
+        if (item.seller_id !== userId && !req.isAdmin) return res.status(403).json({ error: 'You can only update your own items' });
 
         const validationError = validateItemFields({ name, price, dimensions, condition });
         if (validationError) return res.status(400).json({ error: validationError });
@@ -137,7 +137,7 @@ async function updateItemStatus(req, res) {
     try {
         const results = await itemModel.getItemById(itemId);
         if (results.length === 0) return res.status(404).json({ error: 'Item not found' });
-        if (results[0].seller_id !== userId) return res.status(403).json({ error: 'You can only update your own items' });
+        if (results[0].seller_id !== userId && !req.isAdmin) return res.status(403).json({ error: 'You can only update your own items' });
 
         await itemModel.updateItemStatus(itemId, status);
         res.status(200).json({ message: 'Item status updated', status });
@@ -159,7 +159,7 @@ async function uploadItemPhotos(req, res) {
         if (results.length === 0) return res.status(404).json({ error: 'Item not found' });
 
         const item = results[0];
-        if (item.seller_id !== userId) return res.status(403).json({ error: 'You can only upload photos to your own items' });
+        if (item.seller_id !== userId && !req.isAdmin) return res.status(403).json({ error: 'You can only upload photos to your own items' });
 
         await deleteItemFiles(itemId);
         await itemModel.deleteItemPhotos(itemId);
@@ -182,7 +182,7 @@ async function deleteItem(req, res) {
         if (results.length === 0) return res.status(404).json({ error: 'Item not found' });
 
         const item = results[0];
-        if (item.seller_id !== userId) return res.status(403).json({ error: 'You can only delete your own items' });
+        if (item.seller_id !== userId && !req.isAdmin) return res.status(403).json({ error: 'You can only delete your own items' });
 
         await deleteItemFiles(itemId);
         await itemModel.deleteItem(itemId);
