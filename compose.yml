@@ -41,12 +41,12 @@ services:
       db:
         condition: service_healthy
 
-  cloudflared:
-    image: cloudflare/cloudflared:latest
+  ngrok:
+    image: ngrok/ngrok:latest
     restart: unless-stopped
-    command: tunnel --no-autoupdate run
+    command: http app:${API_PORT} --domain=${NGROK_DOMAIN}
     environment:
-      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN}
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN}
     depends_on:
       - app
 
