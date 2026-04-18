@@ -38,6 +38,7 @@ export class ItemsComponent implements OnInit {
   loadingItems = false;
   submitting = false;
   showModal = false;
+  mobileFiltersOpen = false;
 
   // Filters
   searchQuery = '';
@@ -109,6 +110,9 @@ export class ItemsComponent implements OnInit {
     pages.push(total);
     return pages;
   }
+
+  toggleMobileFilters(): void { this.mobileFiltersOpen = !this.mobileFiltersOpen; }
+  closeMobileFilters(): void { this.mobileFiltersOpen = false; }
 
   clearFilters(): void {
     this.searchQuery = '';

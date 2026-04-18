@@ -1,4 +1,4 @@
-# DIEGOAPP
+# NekoPop
 Es importante poner el https:// para que el navegador no intente cargar la página a través de HTTP, lo que causaría un error de conexión debido al certificado autofirmado. Así que, para acceder a la aplicación, debes usar:
 https://localhost:8080
 
@@ -41,39 +41,10 @@ Ejecutar en desarrollo (necesita Docker corriendo):
 
     cd desktop
     pnpm install
-    pnpm run update   # descarga binarios de Neutralino (solo la primera vez)
+    pnpm run update     # descarga binarios de Neutralino (solo la primera vez)
     pnpm start
 
 Generar binario de distribución:
 
     cd desktop
-    pnpm run build
-    # → genera desktop/dist/
-
-Cambiar la URL del servidor (si el servidor no es localhost), editar `desktop/resources/index.html`:
-
-    const API_URL = 'https://192.168.1.50:8080';
-
-La app abre https://localhost:8080/login en una ventana nativa. El certificado autofirmado se acepta automáticamente. Si el servidor no está disponible, muestra una pantalla de error con instrucciones para arrancar Docker.
-
-## Advertencia de certificado en el navegador
-
-El servidor usa un certificado autofirmado, por lo que Chrome puede mostrar "Su conexión no es privada". Opciones para evitarlo:
-
-**Opción 1 — Instalar el certificado en Windows (PowerShell como admin):**
-
-    Import-Certificate -FilePath "data\cert.crt" -CertStoreLocation Cert:\LocalMachine\Root
-
-Reinicia el navegador después.
-
-**Opción 2 — mkcert (recomendado):**
-
-    choco install mkcert   # o: scoop install mkcert
-    mkcert -install
-    mkcert -key-file data/cert.key -cert-file data/cert.crt localhost 127.0.0.1
-
-Los certificados generados son reconocidos automáticamente por Chrome, Firefox y Edge.
-
-**Opción 3 — Flag de Chrome (solo para pruebas rápidas):**
-
-Activar en `chrome://flags/#allow-insecure-localhost`
+    pnpm run build      # → genera desktop/dist/

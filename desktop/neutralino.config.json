@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "defaultMode": "window",
   "port": 0,
-  "url": "https://localhost:8080/login",
+  "url": "https://debora-forceable-steffanie.ngrok-free.dev/login",
   "nativeBlockList": [],
   "modes": {
     "window": {

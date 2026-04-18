@@ -143,7 +143,6 @@ INSERT INTO categories (name) VALUES
 ('Movies & TV'),
 ('Video Games'),
 ('Cameras & Photography'),
-('Sexual stuff'),
 ('Other')
 ON CONFLICT (name) DO NOTHING;
 

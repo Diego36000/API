@@ -44,11 +44,32 @@
     </div>
   }
 
+  <!-- Mobile filter toggle -->
+  <div class="mobile-filter-bar">
+    <button class="mobile-filter-btn" (click)="toggleMobileFilters()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+      Filters
+      @if (activeFilterCount > 0) {
+        <span class="mobile-filter-count">{{ activeFilterCount }}</span>
+      }
+    </button>
+    <span class="mobile-items-count">{{ total }} items</span>
+  </div>
+
   <!-- Layout: sidebar + content -->
   <div class="layout">
 
+    <!-- Mobile backdrop -->
+    @if (mobileFiltersOpen) {
+      <div class="mobile-filters-backdrop" (click)="closeMobileFilters()" (keydown.escape)="closeMobileFilters()"></div>
+    }
+
     <!-- ── Filters sidebar ── -->
-    <aside class="filters-sidebar" aria-label="Filters">
+    <aside class="filters-sidebar" [class.mobile-open]="mobileFiltersOpen" aria-label="Filters">
+      <div class="mobile-sheet-header">
+        <span class="mobile-sheet-title">Filters</span>
+        <button class="mobile-sidebar-close" (click)="closeMobileFilters()" aria-label="Close filters">Done</button>
+      </div>
 
       <!-- Search -->
       <div class="sidebar-search">

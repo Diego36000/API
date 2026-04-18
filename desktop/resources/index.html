@@ -77,33 +77,5 @@
   </div>
 
   <script src="neutralino.js"></script>
-  <script>
-    const API_URL = 'https://localhost:8080';
-
-    try { Neutralino.init(); } catch (e) { console.warn('Neutralino.init error:', e); }
-
-    function show(id) {
-      document.getElementById('loading').classList.remove('visible');
-      document.getElementById('error').classList.remove('visible');
-      document.getElementById(id).classList.add('visible');
-    }
-
-    async function connect() {
-      show('loading');
-      try {
-        // mode: no-cors — respuesta opaca pero detecta si el servidor está activo
-        await fetch(API_URL + '/login', {
-          mode: 'no-cors',
-          signal: AbortSignal.timeout(5000)
-        });
-        window.location.href = API_URL + '/login';
-      } catch (e) {
-        console.error('connect error:', e);
-        show('error');
-      }
-    }
-
-    connect();
-  </script>
 </body>
 </html>
